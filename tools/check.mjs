@@ -128,12 +128,19 @@ async function browserSession() {
       await tapAt(x, y);
       return [x, y];
     }
+    async function swipeUp(x, y, distance) {
+      await run('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+      for (let step = 1; step <= 10; step++) {
+        await run('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - distance * step / 10 }] });
+      }
+      await run('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
     const escape = async () => {
       await run('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
       await run('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     };
     const lifecycle = (state) => run('Page.setWebLifecycleState', { state });
-    return { page, read, capture, click, tapAt, tap, lifecycle, escape, close };
+    return { page, read, capture, click, tapAt, tap, swipeUp, lifecycle, escape, close };
   } catch (error) {
     await close();
     throw error;
@@ -148,8 +155,10 @@ async function assertBounds(browser, minTouch = 44) {
     const scale = outer.width / parseFloat(stage.style.width);
     const [top, right, bottom, left] = stage.dataset.safe.split(',').map(Number);
     const rect = element.getBoundingClientRect();
-    const ok = rect.left >= outer.left + left * scale - 1 && rect.right <= outer.right - right * scale + 1 &&
-      rect.top >= outer.top + top * scale - 1 && rect.bottom <= outer.bottom - bottom * scale + 1;
+    const scroll = element.parentElement.closest('.scroll-vertical')?.getBoundingClientRect();
+    const ok = rect.left >= (scroll?.left ?? outer.left + left * scale) - 1 &&
+      rect.right <= (scroll?.right ?? outer.right - right * scale) + 1 &&
+      (scroll || (rect.top >= outer.top + top * scale - 1 && rect.bottom <= outer.bottom - bottom * scale + 1));
     const touch = element.dataset.qa !== 'touch' || Math.min(rect.width, rect.height) / scale >= ${minTouch} - 0.01;
     return ok && touch ? [] : [element.dataset.node];
   })`);
@@ -601,6 +610,109 @@ async function checkShieldDrill(browser, preview, captures) {
   await checkDrillSuspension(preview);
 }
 
+async function checkRelayDispatch(browser, preview, captures) {
+  const profile = 'compact';
+  const { viewport } = preview.recipe.design.profiles[profile];
+  const textOf = (id) => browser.read(`document.querySelector('[data-node="${id}"] .copy').textContent`);
+  const current = () => browser.read(`Array.from(document.querySelectorAll('[aria-current="page"]'), (tab) => tab.dataset.node)`);
+  const tabs = () => browser.read(`Array.from(document.querySelectorAll('[data-node="section-bar"] button'), (tab) => [
+    tab.dataset.node, tab.textContent, tab.getBoundingClientRect().toJSON(),
+  ])`);
+  const entries = (section) => browser.read(`Array.from(document.querySelectorAll('[data-node="list-${section}"] button[data-node^="row-"]'),
+    (row) => row.dataset.node)`);
+  const eventScroll = () => browser.read(`document.querySelector('[data-node="list-events"]').scrollTop`);
+  async function open(id, state) {
+    await browser.tap(id);
+    await settled(browser, state);
+    await assertBounds(browser, 48);
+  }
+  async function scrollToLastEvent() {
+    for (let i = 0; i < 4; i++) await browser.swipeUp(158, 395, 270);
+    const offset = await eventScroll();
+    assert.ok(offset > 600, `Touch swipes scrolled the event list only ${offset} units`);
+    return offset;
+  }
+
+  await browser.page(preview, profile, { touch: true });
+  const originalTabs = await tabs();
+  const modes = await entries('activities');
+  const events = await entries('events');
+  assert.equal(modes.length, 15);
+  assert.equal(events.length, 15);
+  assert.equal(new Set([...modes, ...events]).size, 30);
+  assert.deepEqual(originalTabs.map(([id]) => id), ['tab-progress', 'tab-activities', 'tab-events']);
+  assert.deepEqual(await current(), ['tab-progress']);
+  await assertBounds(browser, 48);
+  await browser.capture(join(captures, 'progress-compact.png'), viewport);
+
+  // One tap resumes the saved objective. Back restores the control that started it.
+  await open('continue-chapter', 'chapter-3');
+  assert.equal(await textOf('chapter-checkpoint'), 'Глава 3 · Задача 2 из 4');
+  assert.equal(await focus(browser), 'title-chapter-3');
+  await browser.capture(join(captures, 'chapter-compact.png'), viewport);
+  await open('back-chapter-3', 'progress');
+  assert.equal(await focus(browser), 'continue-chapter');
+
+  // Two taps launch the starter mode. Its locked neighbor remains available for inspection.
+  await open('tab-activities', 'activities');
+  assert.deepEqual(await current(), ['tab-activities']);
+  await assertCopy(browser, modes.flatMap((row) => [`row-title-${row.slice(4)}`, `row-status-${row.slice(4)}`]));
+  await browser.capture(join(captures, 'activities-compact.png'), viewport);
+  await open('quick-start', 'training');
+  assert.equal(await textOf('title-training'), 'Тренировка запущена');
+  await browser.capture(join(captures, 'training-compact.png'), viewport);
+  await open('back-training', 'activities');
+  assert.equal(await focus(browser), 'quick-start');
+  await open('row-signal-school', 'signal-school');
+  assert.equal(await textOf('status-signal-school'), 'Закрыто');
+  assert.equal(await textOf('requirement-signal-school'), 'Завершите главу 3');
+  assert.deepEqual(await current(), ['tab-activities']);
+  await browser.capture(join(captures, 'locked-compact.png'), viewport);
+  await open('tab-progress', 'progress');
+
+  // Opening a named event takes two taps and scrolling from Home.
+  await open('tab-events', 'events');
+  assert.deepEqual(await current(), ['tab-events']);
+  await assertCopy(browser, events.flatMap((row) => [`row-title-${row.slice(4)}`, `row-status-${row.slice(4)}`]));
+  const offset = await scrollToLastEvent();
+  await browser.capture(join(captures, 'events-compact.png'), viewport);
+  await open('row-night-convoy', 'night-convoy');
+  assert.equal(await textOf('title-night-convoy'), 'Ночной конвой');
+  assert.equal(await textOf('next-night-convoy'), 'Сопроводите транспорт до шлюза C.');
+  assert.deepEqual(await tabs(), originalTabs);
+  await browser.capture(join(captures, 'event-compact.png'), viewport);
+  await open('back-night-convoy', 'events');
+  assert.equal(await eventScroll(), offset);
+  assert.equal(await focus(browser), 'row-night-convoy');
+  await open('tab-progress', 'progress');
+  await open('tab-events', 'events');
+  assert.equal(await eventScroll(), offset);
+
+  // The expanded label fits with reduced motion, and a new event uses the same section.
+  const expanded = await makePreview('relay-dispatch', { newEvent: true });
+  await browser.page(expanded, profile, { touch: true, reduced: '1', fixture: 'long-label' });
+  assert.deepEqual(await entries('activities'), modes);
+  assert.deepEqual(await entries('events'), [...events, 'row-dawn-convoy']);
+  assert.deepEqual(await tabs(), originalTabs);
+  await open('tab-events', 'events');
+  const expandedOffset = await scrollToLastEvent();
+  await assertCopy(browser, ['row-title-night-convoy']);
+  await open('row-night-convoy', 'night-convoy');
+  await assertCopy(browser, ['title-night-convoy']);
+  await browser.capture(join(captures, 'event-long-label-compact.png'), viewport);
+  await browser.escape();
+  await settled(browser, 'events');
+  assert.equal(await eventScroll(), expandedOffset);
+  assert.equal(await focus(browser), 'row-night-convoy');
+  await open('row-dawn-convoy', 'dawn-convoy');
+  assert.equal(await textOf('title-dawn-convoy'), 'Рассветный конвой');
+  assert.deepEqual(await current(), ['tab-events']);
+  await open('back-dawn-convoy', 'events');
+  assert.equal(await focus(browser), 'row-dawn-convoy');
+  await browser.capture(join(captures, 'events-expanded-compact.png'), viewport);
+  console.log('OK relay-dispatch 320 × 568 touch routes, catalog growth, scroll, focus and reduced motion');
+}
+
 const selectedExamples = process.argv[2] ? [process.argv[2]] : examples;
 await mkdir(artifacts, { recursive: true });
 const browser = await browserSession();
@@ -610,6 +722,11 @@ try {
     const captures = resolve(repo, 'examples', name, 'captures');
     if (name === 'shield-drill') {
       await checkShieldDrill(browser, preview, captures);
+      console.log(`OK ${name} PNGs in ${captures}`);
+      continue;
+    }
+    if (name === 'relay-dispatch') {
+      await checkRelayDispatch(browser, preview, captures);
       console.log(`OK ${name} PNGs in ${captures}`);
       continue;
     }

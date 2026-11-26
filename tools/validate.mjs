@@ -50,6 +50,10 @@ export async function validateExample(recipe, pack, loadAsset) {
       }
       ids.set(node.id, node.screen ?? screen);
       if (node.visibilityMotion !== undefined) assert.equal(node.visibilityMotion, 'instant');
+      if (node.scroll !== undefined) {
+        assert.ok(node.scroll === 'vertical' && !node.clip && !node.action && node.children?.length && (node.screen ?? screen),
+          `Invalid scroll container: ${node.id}`);
+      }
       for (const box of [node.box, ...Object.values(node.boxes ?? {})]) {
         assert.ok(tuple(box, 4) && box[2] > 0 && box[3] > 0, `Invalid box: ${node.id}`);
       }
@@ -65,6 +69,11 @@ export async function validateExample(recipe, pack, loadAsset) {
       if (node.action) {
         assert.ok(Object.hasOwn(actions, node.action), `Unknown action: ${node.action}`);
         if (actions[node.action].type === 'input') controls.add(node.id);
+      }
+      if (node.currentIn !== undefined) {
+        assert.ok(Array.isArray(node.currentIn) && node.currentIn.length && controls.has(node.id) && actions[node.action].navigate?.section,
+          `Invalid current-section control: ${node.id}`);
+        for (const state of node.currentIn) knownStates(state);
       }
       if (node.progress) {
         assert.ok(node.label && node.children?.some((child) => child.id === node.progress.fill), `Invalid progress fill: ${node.id}`);
@@ -87,6 +96,9 @@ export async function validateExample(recipe, pack, loadAsset) {
     if (!action.navigate) continue;
     const { to, label, focus } = action.navigate;
     screenExists(to);
+    if (action.navigate.section !== undefined) {
+      assert.ok(action.navigate.section === true && !action.navigate.back, `Invalid section route: ${id}`);
+    }
     assert.ok(action.type === 'input' && action.from?.length && label, `Invalid screen action: ${id}`);
     assert.ok(action.from.every((state) => states[state].screen !== to), `Screen action must change screens: ${id}`);
     assert.ok(ids.has(focus) && ids.get(focus) === to, `Invalid route focus target: ${id}`);

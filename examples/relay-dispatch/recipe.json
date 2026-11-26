@@ -1,0 +1,21 @@
+{
+  "id": "relay-dispatch",
+  "locale": "ru",
+  "title": "Релейная станция 07",
+  "pack": { "id": "relay-dispatch", "version": "1.0.0" },
+  "design": {
+    "width": 320,
+    "profiles": { "compact": { "viewport": [320, 568], "safeInsets": [24, 0, 20, 0] } }
+  },
+  "theme": { "text": "#eef9f8" },
+  "data": {},
+  "fixtures": {
+    "long-label": { "night-convoy-title": "Ночной конвой дальнего рубежа и грузовой станции" }
+  },
+  "actions": {},
+  "states": {},
+  "screens": {},
+  "initialState": "progress",
+  "nodes": [],
+  "motion": {}
+}

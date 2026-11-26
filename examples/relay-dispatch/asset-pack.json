@@ -1,0 +1,9 @@
+{
+  "id": "relay-dispatch",
+  "version": "1.0.0",
+  "assetRoot": "../shield-drill",
+  "provenance": { "scene": "Reuses the original Relay 07 bay from the Shield Drill example." },
+  "assets": {
+    "bay": { "path": "assets/relay-bay.png", "size": [1024, 1536], "fit": "cover" }
+  }
+}

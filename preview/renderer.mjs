@@ -162,6 +162,7 @@ async function mount(pack, recipe) {
   const nodes = new Map();
   const screens = new Map();
   const remembered = new Map();
+  const scrollPositions = new Map();
   const history = [];
   const screenOf = (id) => recipe.states[id]?.screen;
   const visuals = new Map(Object.entries(recipe.motion));
@@ -181,6 +182,7 @@ async function mount(pack, recipe) {
   for (const [key, value] of Object.entries(recipe.theme ?? {})) stage.style.setProperty(`--${key}`, value);
   stage.setAttribute('aria-label', recipe.title);
   document.title = recipe.title;
+  if (recipe.locale) stage.lang = recipe.locale;
 
   function create(source, parent, screen, inheritedSpace = 'safe', ancestors = []) {
     const enabled = source.action && recipe.actions[source.action].type === 'input';
@@ -194,6 +196,7 @@ async function mount(pack, recipe) {
     if (source.shadow) element.style.filter = `drop-shadow(${source.shadow})`;
     if (source.mirror) element.style.scale = '-1 1';
     if (source.clip) element.style.overflow = 'hidden';
+    if (source.scroll) element.classList.add('scroll-vertical');
     if (source.radius) element.style.borderRadius = px(source.radius);
     if (source.passThrough) element.style.pointerEvents = 'none';
     if (source.focusable) element.tabIndex = -1;
@@ -397,6 +400,8 @@ async function mount(pack, recipe) {
         element.disabled = source.disabled === true || source.disabledIn?.includes(sceneState) === true ||
           (source.disableWhenClaimed === true && hasClaim) || manual || !visible ||
           (!!animation && source.action !== skipAction);
+        if (source.currentIn?.includes(sceneState)) element.setAttribute('aria-current', 'page');
+        else if (source.currentIn) element.removeAttribute('aria-current');
       }
       if (art) {
         const selected = (hasClaim && source.claimedAsset) || source.assetByState?.[paintState] || source.asset;
@@ -438,6 +443,12 @@ async function mount(pack, recipe) {
     for (const [screen, next] of Object.entries(spec.remember ?? {})) remembered.set(screen, next);
   }
 
+  function restoreScroll(screen) {
+    for (const [id, node] of nodes) {
+      if (node.source.scroll && node.screen === screen) node.element.scrollTop = scrollPositions.get(id) ?? 0;
+    }
+  }
+
   function finish() {
     const { route, sequence } = animation;
     animation = null;
@@ -445,6 +456,7 @@ async function mount(pack, recipe) {
     state = route?.to ?? sequence?.phases?.at(-1)?.state ?? state;
     draw();
     sync();
+    if (route) restoreScroll(screenOf(state));
     const target = nodes.get(route?.focus ?? sequence?.focus)?.element;
     if (target) target.focus({ preventScroll: true });
   }
@@ -480,10 +492,17 @@ async function mount(pack, recipe) {
     const { navigate } = recipe.actions[action];
     const origin = screenOf(from);
     const previous = navigate.back && history.at(-1)?.screen === navigate.to ? history.at(-1) : null;
-    const to = remembered.get(navigate.to) ?? recipe.screens[navigate.to].initial;
+    const initial = recipe.screens[navigate.to].initial;
+    const to = navigate.section ? initial : (remembered.get(navigate.to) ?? initial);
     if (!manual) {
       remembered.set(origin, from);
-      if (previous) history.pop();
+      for (const [id, node] of nodes) {
+        if (node.source.scroll && node.screen === origin && node.element.getClientRects().length) {
+          scrollPositions.set(id, node.element.scrollTop);
+        }
+      }
+      if (navigate.section) history.length = 0;
+      else if (previous) history.pop();
       else if (!navigate.back) history.push({ screen: origin, focus: trigger });
     }
     const duration = 260;
@@ -503,6 +522,7 @@ async function mount(pack, recipe) {
       return;
     }
     advance(0);
+    if (active.route) restoreScroll(screenOf(active.route.to));
     nodes.get(active.sequence?.skip?.focus)?.element.focus({ preventScroll: true });
     request = requestAnimationFrame(frame);
   }
@@ -550,12 +570,14 @@ async function mount(pack, recipe) {
     counts = {};
     claimed = false;
     remembered.clear();
+    scrollPositions.clear();
     history.length = 0;
   }
 
   function reset() {
     resetState();
     draw();
+    restoreScroll(screenOf(state));
     sync();
   }
 
@@ -565,6 +587,7 @@ async function mount(pack, recipe) {
     state = stateId;
     manual = true;
     draw();
+    restoreScroll(screenOf(state));
     sync();
   }
 
