@@ -1,13 +1,26 @@
+import { chapter, eventAvailability, seasonEvents, seasonNow } from './season.mjs';
+
 const sections = { progress: 'Прогресс', activities: 'Активности', events: 'События' };
 const statuses = {
   available: { label: 'Доступно', color: '#9df4de' },
   locked: { label: 'Закрыто', color: '#ffcb91' },
   upcoming: { label: 'Скоро', color: '#b5cfe8' },
+  closed: { label: 'Завершено', color: '#b2cad0' },
 };
 const muted = '#b2cad0';
 const panel = '#102835';
 const mint = '#a6f5e2';
 const ink = '#08232a';
+const eventPhases = {
+  upcoming: { label: 'Скоро', color: '#b5cfe8' },
+  running: { label: 'Идёт', color: mint },
+  claim: { label: 'Идёт выдача', color: '#ffcc93' },
+  closed: { label: 'Завершено', color: muted },
+};
+const dateFormat = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+});
+const date = (time) => `${dateFormat.format(time)} UTC`;
 
 function copy(id, box, text, font = {}, options = {}) {
   return { id, box, text, font: { size: 15, align: 'left', ...font }, ...options };
@@ -39,8 +52,8 @@ export function buildDispatchRecipe(recipe, catalog, { newEvent = false } = {}) 
     return copy(`title-${id}`, box, text, { size: 29, minSize: 23, weight: 780 }, { focusable: true, qa: 'copy' });
   }
 
-  function back(id, destination, label = sections[destination]) {
-    const action = route(`back-${id}`, [id], destination, `Назад · ${label}`, { back: true });
+  function back(id, destination, label = sections[destination], options = {}) {
+    const action = route(`back-${id}`, [id], destination, `Назад · ${label}`, { back: true, ...options });
     return button(action, [16, 4, 128, 48], `‹  ${label}`, action);
   }
 
@@ -50,7 +63,7 @@ export function buildDispatchRecipe(recipe, catalog, { newEvent = false } = {}) 
       fill: 'linear-gradient(180deg, #071820 0%, #081a23c4 24%, #08172020 52%, #071a22ea 79%, #07181f 100%)' },
   );
 
-  route('continue-chapter', ['progress'], 'chapter-3', 'Продолжить главу 3');
+  route('continue-chapter', ['progress', 'season-return', 'season-return-claim'], 'chapter-3', 'Продолжить главу 3');
   addScreen('progress', sections.progress, 'progress', [
     copy('station-name', [16, 10, 288, 18], recipe.title, { size: 12, weight: 730, tracking: 1.05, color: mint }),
     title('progress', 'Прогресс', [16, 28, 288, 49]),
@@ -129,12 +142,17 @@ export function buildDispatchRecipe(recipe, catalog, { newEvent = false } = {}) 
       y += 8;
     }
     const countLabel = section === 'activities' ? `Режимы · ${count}` : `В каталоге · ${count}`;
+    const events = section === 'events';
     addScreen(section, sections[section], section, [
-      title(section, sections[section]),
+      title(section, sections[section], events ? [16, 13, 151, 44] : undefined),
+      ...(events ? [button('open-calendar', [176, 11, 128, 48], 'Календарь',
+        route('open-calendar', ['events'], 'calendar', 'Открыть календарь'))] : []),
       copy(`${section}-count`, [16, 59, 288, 18], countLabel, { size: 13, color: muted }),
       { id: `list-${section}`, box: [16, 90, 288, 362], scroll: 'vertical', qa: 'copy', children: rows },
     ]);
   }
+
+  addSeasonalScreens();
 
   nodes.push({ id: 'section-bar', box: [0, 462, 320, 62], fill: '#10242d', qa: 'copy',
     children: Object.entries(sections).map(([section, label], index) => {
@@ -144,4 +162,144 @@ export function buildDispatchRecipe(recipe, catalog, { newEvent = false } = {}) 
     }),
   });
   return recipe;
+
+  function addSeasonalScreens() {
+    const claimActions = new Map();
+    const filters = [
+      { id: 'calendar', label: 'Все' },
+      { id: 'calendar-running', label: 'Идут', phases: ['running'] },
+      { id: 'calendar-upcoming', label: 'Скоро', phases: ['upcoming'] },
+      { id: 'calendar-results', label: 'Итоги', phases: ['claim', 'closed'] },
+    ];
+    const eventTitle = (event) => ({ key: `${event.id}-title` });
+    for (const event of seasonEvents) recipe.data[eventTitle(event).key] ??= event.name;
+
+    function detail(event, availability, origin, section, backLabel) {
+      const id = `${origin}-${event.id}`;
+      const { phase, canPlay, canClaim } = availability;
+      const { label, color } = eventPhases[phase];
+      const backButton = back(id, origin, backLabel);
+      const [current, total] = event.progress;
+      const fields = [
+        ['participation', 'Участие', `${date(event.start)} —\n${date(event.end)}`],
+        ['access', 'Условие доступа', chapter >= event.chapter ? `Глава ${event.chapter} открыта` : `Откройте главу ${event.chapter}`],
+        ['progress', 'Прогресс', `${current} из ${total} задач`],
+        ['cutoff', 'Получение награды до', date(event.cutoff)],
+      ];
+      const reward = event.reward === 'collected' ? 'Награда получена'
+        : canClaim ? 'Награда заработана'
+          : phase === 'closed' && event.reward === 'earned' ? 'Срок получения истёк'
+            : phase === 'closed' || phase === 'claim' ? 'Награда не заработана' : 'Награда за все задачи';
+      const actionId = `${id}-${canClaim ? 'claim' : 'play'}`;
+      const newState = `${id}-${canClaim ? 'claimed' : 'playing'}`;
+      const result = canClaim ? 'Награда получена' : 'Участие начато';
+      const rewardStatus = copy(`reward-${id}`, [28, 360, 264, 29], reward, { size: 15, color, weight: 700 });
+      addScreen(id, event.name, section, [
+        backButton,
+        title(id, eventTitle(event), [16, 57, 288, 80]),
+        copy(`phase-${id}`, [16, 138, 288, 25], label, { size: 15, color, weight: 740 }),
+        { id: `info-${id}`, box: [16, 170, 288, 226], fill: '#102835f5', radius: 12,
+          children: fields.flatMap(([key, caption, value], index) => {
+            const y = [8, 68, 106, 144][index];
+            return [
+              copy(`${key}-label-${id}`, [12, y, 264, 16], caption, { size: 12, color: muted }),
+              copy(`${key}-${id}`, [12, y + 16, 264, index ? 20 : 38], value, { size: 14, weight: 700 }),
+            ];
+          }),
+        },
+        rewardStatus,
+        ...(canPlay || canClaim ? [{
+          ...button(actionId, [16, 406, 288, 48], canClaim ? 'Забрать награду' : 'Участвовать', actionId, true),
+          ...(canClaim ? { visibleIn: [id] } : { disabledIn: [newState], textByState: { [newState]: result } }),
+        }] : []),
+      ], `back-${id}`);
+
+      if (canPlay || canClaim) {
+        states[newState] = { ...states[id], label: `${event.name} · ${result}` };
+        bySection[section].push(newState);
+        actions[backButton.action].from.push(newState);
+        actions[actionId] = { type: 'input', from: [id], next: newState };
+      }
+      if (canClaim) {
+        rewardStatus.textByState = { [newState]: result };
+        const claim = claimActions.get(event.id) ?? {};
+        claim[id] = { actionId, newState };
+        claimActions.set(event.id, claim);
+      }
+      return id;
+    }
+
+    for (const filter of filters) {
+      const id = filter.id;
+      const rows = [];
+      for (const event of seasonEvents) {
+        const availability = eventAvailability(event, seasonNow);
+        const { phase } = availability;
+        if (filter.phases && !filter.phases.includes(phase)) continue;
+        const card = detail(event, availability, id, 'events', 'Календарь');
+        const action = route(`open-${card}`, [id], card, event.name);
+        const { label, color } = eventPhases[phase];
+        const timing = phase === 'upcoming' ? `Старт ${date(event.start)}`
+          : phase === 'running' ? `До ${date(event.end)}`
+            : phase === 'claim' ? `Награды до ${date(event.cutoff)}` : `Итоги с ${date(event.end)}`;
+        rows.push({
+          id: `row-${card}`, box: [0, rows.length * 88, 282, 82], radius: 9, fill: panel, action, qa: 'touch',
+          children: [
+            copy(`row-title-${card}`, [10, 5, 262, 34], eventTitle(event), { size: 15, weight: 720 }),
+            copy(`row-phase-${card}`, [10, 40, 262, 16], label, { size: 12, color, weight: 700 }),
+            copy(`row-time-${card}`, [10, 57, 262, 18], timing, { size: 12, color: muted }),
+          ],
+        });
+      }
+      addScreen(id, `Календарь · ${filter.label}`, 'events', [
+        back(id, 'events', 'События', { focus: 'open-calendar' }),
+        title(id, `Календарь · ${filter.label}`, [16, 58, 288, 44]),
+        ...filters.map((other, index) => {
+          const box = [16 + index * 73, 110, 69, 48];
+          const control = `filter-${id}-to-${other.id}`;
+          return other === filter
+            ? copy(control, box, other.label, { size: 14, align: 'center', weight: 740, color: ink }, { fill: mint, radius: 9 })
+            : button(control, box, other.label, route(control, [id], other.id, `Календарь · ${other.label}`, { section: true }));
+        }),
+        { id: `list-${id}`, box: [16, 170, 288, 280], scroll: 'vertical', qa: 'copy', children: rows },
+      ], `back-${id}`);
+    }
+
+    recipe.previewDemos = {};
+    for (const [id, previousId, label] of [
+      ['season-return', 'night-convoy', 'Возвращение после смены сезона'],
+      ['season-return-claim', 'deep-relay', 'Смена сезона · выдача ещё открыта'],
+    ]) {
+      const previousEvent = seasonEvents.find(({ id }) => id === previousId);
+      const availability = eventAvailability(previousEvent, seasonNow);
+      const oldCard = detail(previousEvent, availability, id, 'progress', 'К сводке');
+      const oldLabel = `Итоги · ${previousEvent.name}`;
+      const oldAction = route(`open-${oldCard}`, [id], oldCard, oldLabel);
+      addScreen(id, label, 'progress', [
+        title(id, 'Снова на станции', [16, 13, 288, 50]),
+        { id: `news-${id}`, box: [16, 76, 288, 102], fill: panel, radius: 12, children: [
+          copy(`season-${id}`, [12, 8, 264, 19], 'НОВЫЙ СЕЗОН', { size: 12, color: mint, weight: 740 }),
+          copy(`news-heading-${id}`, [12, 30, 264, 23], 'Дальний рубеж', { size: 19, weight: 740 }),
+          copy(`news-copy-${id}`, [12, 55, 264, 37], 'В календаре появились «Дневные поставки».', { size: 14, color: muted }),
+        ] },
+        { id: `saved-${id}`, box: [16, 193, 288, 140], fill: panel, radius: 12, children: [
+          copy(`checkpoint-${id}`, [12, 8, 264, 20], 'Глава 3 · Задача 2 из 4', { size: 13, color: mint, weight: 720 }),
+          copy(`objective-${id}`, [12, 30, 264, 46], 'Верните сигнал на релейной вышке.', { size: 17, weight: 740 }),
+          button(`continue-${id}`, [12, 78, 264, 48], 'Продолжить главу', 'continue-chapter', true),
+        ] },
+        button(`previous-${id}`, [16, 348, 288, 48], `${oldLabel}\n${availability.canClaim ? 'Участие завершено' : 'Срок получения истёк'}`, oldAction),
+        button(`dismiss-${id}`, [16, 404, 288, 48], 'К обычному прогрессу',
+          route(`dismiss-${id}`, [id], 'progress', 'К обычному прогрессу', { section: true })),
+      ], `dismiss-${id}`);
+      recipe.previewDemos[id] = { state: id, label };
+    }
+
+    for (const claim of claimActions.values()) {
+      for (const { actionId } of Object.values(claim)) {
+        actions[actionId].remember = Object.fromEntries(
+          Object.entries(claim).map(([screen, { newState }]) => [screen, newState]),
+        );
+      }
+    }
+  }
 }

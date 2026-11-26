@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { examples, makePreview } from './preview.mjs';
+import { eventAvailability, seasonEvents } from '../examples/relay-dispatch/season.mjs';
 
 const repo = fileURLToPath(new URL('..', import.meta.url));
 const artifacts = resolve(repo, '.artifacts');
@@ -678,7 +679,8 @@ async function checkRelayDispatch(browser, preview, captures) {
   await browser.capture(join(captures, 'events-compact.png'), viewport);
   await open('row-night-convoy', 'night-convoy');
   assert.equal(await textOf('title-night-convoy'), 'Ночной конвой');
-  assert.equal(await textOf('next-night-convoy'), 'Сопроводите транспорт до шлюза C.');
+  assert.equal(await textOf('status-night-convoy'), 'Завершено');
+  assert.equal(await textOf('next-night-convoy'), 'Посмотрите итог и сроки в календаре.');
   assert.deepEqual(await tabs(), originalTabs);
   await browser.capture(join(captures, 'event-compact.png'), viewport);
   await open('back-night-convoy', 'events');
@@ -713,6 +715,164 @@ async function checkRelayDispatch(browser, preview, captures) {
   console.log('OK relay-dispatch 320 × 568 touch routes, catalog growth, scroll, focus and reduced motion');
 }
 
+async function checkRelaySeasons(browser, preview, captures) {
+  const profile = 'compact';
+  const { viewport } = preview.recipe.design.profiles[profile];
+  const convoy = seasonEvents.find(({ id }) => id === 'night-convoy');
+  for (const [time, phase, canPlay, canClaim] of [
+    [convoy.start - 1, 'upcoming', false, false],
+    [convoy.start, 'running', true, false],
+    [convoy.end - 1, 'running', true, false],
+    [convoy.end, 'claim', false, true],
+    [convoy.cutoff - 1, 'claim', false, true],
+    [convoy.cutoff, 'closed', false, false],
+  ]) {
+    assert.deepEqual(eventAvailability(convoy, time), { phase, canPlay, canClaim });
+  }
+  assert.equal(eventAvailability({ ...convoy, chapter: 4 }, convoy.start).canPlay, false);
+  for (const reward of [undefined, 'collected']) {
+    assert.equal(eventAvailability({ ...convoy, reward }, convoy.end).canClaim, false);
+  }
+
+  const textOf = (id) => browser.read(`document.querySelector('[data-node="${id}"] .copy').textContent`);
+  const visibleActions = () => browser.read(`Array.from(document.querySelectorAll('button[data-action]')).filter(
+    (button) => !button.disabled && button.getClientRects().length,
+  ).map((button) => button.dataset.action)`);
+  const scroll = (id) => browser.read(`document.querySelector('[data-node="list-${id}"]').scrollTop`);
+  const capture = (name) => browser.capture(join(captures, `${name}-compact.png`), viewport);
+  async function waitForScroll(id, minimum) {
+    let last;
+    let stableSamples = 0;
+    await until(async () => {
+      const offset = await scroll(id);
+      stableSamples = offset === last && offset >= minimum ? stableSamples + 1 : 0;
+      last = offset;
+      return stableSamples >= 4;
+    }, `The ${id} list did not settle after touching it`);
+    return last;
+  }
+  async function open(node, state) {
+    await browser.tap(node);
+    await settled(browser, state);
+    await assertBounds(browser, 48);
+  }
+  async function card(id, phase) {
+    await open(`row-${id}`, id);
+    assert.equal(await textOf(`phase-${id}`), phase);
+    assert.match(await textOf(`participation-${id}`), /UTC.*\n.*UTC/);
+    assert.match(await textOf(`cutoff-${id}`), /UTC$/);
+    await assertCopy(browser, ['title', 'phase', 'participation', 'access', 'progress', 'cutoff', 'reward'].map((field) => `${field}-${id}`));
+  }
+
+  await browser.page(preview, profile, { touch: true });
+  await open('tab-events', 'events');
+  await open('open-calendar', 'calendar');
+  await capture('calendar');
+  await open('filter-calendar-to-calendar-upcoming', 'calendar-upcoming');
+  const upcoming = 'calendar-upcoming-day-supplies';
+  await card(upcoming, 'Скоро');
+  assert.equal(await textOf(`progress-${upcoming}`), '0 из 4 задач');
+  assert.ok(!(await visibleActions()).includes(`${upcoming}-play`));
+  await capture('calendar-upcoming');
+  await open(`back-${upcoming}`, 'calendar-upcoming');
+  await open('filter-calendar-upcoming-to-calendar-running', 'calendar-running');
+
+  const locked = 'calendar-running-silent-array';
+  await card(locked, 'Идёт');
+  assert.equal(await textOf(`access-${locked}`), 'Откройте главу 4');
+  assert.ok(!(await visibleActions()).includes(`${locked}-play`));
+  await open(`back-${locked}`, 'calendar-running');
+  const running = 'calendar-running-solar-storm';
+  await card(running, 'Идёт');
+  assert.equal(await textOf(`progress-${running}`), '2 из 5 задач');
+  await capture('calendar-running');
+  await open(`${running}-play`, `${running}-playing`);
+  assert.ok(!(await visibleActions()).includes(`${running}-play`));
+  assert.equal(await textOf(`${running}-play`), 'Участие начато');
+  await open(`back-${running}`, 'calendar-running');
+  await open('filter-calendar-running-to-calendar-results', 'calendar-results');
+
+  const claim = 'calendar-results-deep-relay';
+  await card(claim, 'Идёт выдача');
+  assert.equal(await textOf(`reward-${claim}`), 'Награда заработана');
+  await capture('calendar-claim');
+  const [x, y] = await browser.tap(`${claim}-claim`);
+  await browser.tapAt(x, y);
+  await settled(browser, `${claim}-claimed`);
+  assert.equal((await logged(browser))[`${claim}-claim`], 1);
+  assert.equal(await textOf(`reward-${claim}`), 'Награда получена');
+  await capture('calendar-claimed');
+  await open(`back-${claim}`, 'calendar-results');
+  await open('filter-calendar-results-to-calendar', 'calendar');
+  await browser.swipeUp(158, 428, 165);
+  await waitForScroll('calendar', 45);
+  await open('row-calendar-deep-relay', 'calendar-deep-relay-claimed');
+  assert.equal(await textOf('reward-calendar-deep-relay'), 'Награда получена');
+  assert.ok(!(await visibleActions()).includes('calendar-deep-relay-claim'));
+
+  const expired = 'calendar-results-night-convoy';
+  await browser.page(preview, profile, { touch: true, reduced: '1', fixture: 'long-label' });
+  await open('tab-events', 'events');
+  await open('open-calendar', 'calendar');
+  await open('filter-calendar-to-calendar-results', 'calendar-results');
+  await browser.swipeUp(158, 428, 188);
+  await waitForScroll('calendar-results', 110);
+  await browser.swipeUp(158, 428, 188);
+  const offset = await waitForScroll('calendar-results', 240);
+  await assertCopy(browser, [`row-title-${expired}`]);
+  await capture('calendar-results');
+  await card(expired, 'Завершено');
+  assert.match(await textOf(`title-${expired}`), /дальнего рубежа/);
+  assert.equal(await textOf(`reward-${expired}`), 'Срок получения истёк');
+  assert.ok(!(await visibleActions()).some((action) => action === `${expired}-play` || action === `${expired}-claim`));
+  await capture('calendar-expired-long-label');
+  await open(`back-${expired}`, 'calendar-results');
+  assert.equal(await scroll('calendar-results'), offset);
+  assert.equal(await focus(browser), `row-${expired}`);
+  await open(`row-${expired}`, expired);
+  await browser.escape();
+  await settled(browser, 'calendar-results');
+  assert.equal(await scroll('calendar-results'), offset);
+  assert.equal(await focus(browser), `row-${expired}`);
+  await open('back-calendar-results', 'events');
+  assert.equal(await focus(browser), 'open-calendar');
+
+  for (const [demo, previousId, expectedPhase] of [
+    ['season-return', 'night-convoy', 'Завершено'],
+    ['season-return-claim', 'deep-relay', 'Идёт выдача'],
+  ]) {
+    const oldCard = `${demo}-${previousId}`;
+    await browser.page(preview, profile, { touch: true, demo });
+    await settled(browser, demo);
+    await assertBounds(browser, 48);
+    assert.equal(await textOf(`checkpoint-${demo}`), 'Глава 3 · Задача 2 из 4');
+    assert.match(await textOf(`news-copy-${demo}`), /Дневные поставки/);
+    await assertCopy(browser, [`title-${demo}`, `objective-${demo}`, `news-copy-${demo}`, `previous-${demo}`]);
+    if (demo === 'season-return') await capture('season-return');
+    await open(`previous-${demo}`, oldCard);
+    assert.equal(await textOf(`phase-${oldCard}`), expectedPhase);
+    if (demo === 'season-return-claim') {
+      await capture('season-return-old-claim');
+      await open(`${oldCard}-claim`, `${oldCard}-claimed`);
+      assert.equal(await textOf(`reward-${oldCard}`), 'Награда получена');
+    } else {
+      assert.equal(await textOf(`reward-${oldCard}`), 'Срок получения истёк');
+      assert.ok(!(await visibleActions()).includes(`${oldCard}-claim`));
+      await capture('season-return-old-expired');
+    }
+    await open(`back-${oldCard}`, demo);
+    assert.equal(await focus(browser), `previous-${demo}`);
+    await open(`continue-${demo}`, 'chapter-3');
+    assert.equal(await textOf('chapter-checkpoint'), 'Глава 3 · Задача 2 из 4');
+    assert.equal(await textOf('chapter-goal'), 'Верните сигнал на релейной вышке.');
+    await open('back-chapter-3', 'progress');
+  }
+  await browser.page(preview, profile, { touch: true, demo: 'season-return' });
+  await open('dismiss-season-return', 'progress');
+  await open('continue-chapter', 'chapter-3');
+  console.log('OK relay-dispatch seasonal cutoffs, calendar filter/scroll/focus, claims and returning progression');
+}
+
 const selectedExamples = process.argv[2] ? [process.argv[2]] : examples;
 await mkdir(artifacts, { recursive: true });
 const browser = await browserSession();
@@ -727,6 +887,7 @@ try {
     }
     if (name === 'relay-dispatch') {
       await checkRelayDispatch(browser, preview, captures);
+      await checkRelaySeasons(browser, preview, captures);
       console.log(`OK ${name} PNGs in ${captures}`);
       continue;
     }

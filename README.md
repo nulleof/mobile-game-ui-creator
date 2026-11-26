@@ -34,7 +34,7 @@ node tools/preview.mjs orbital-works
 | **Orbital Works** | Обзор орбитальной станции, улучшение реактора и состояния загрузки. [Рецепт](examples/orbital-works/recipe.md) · [Концепты и исходники](examples/orbital-works/generation.md) · [Кадры](examples/orbital-works/captures) |
 | **CatSurvivor** | Портретный экран Journey, детали главы и открытие сундука. [Рецепт](examples/catsurvivor/recipe.md) · [Кадры](examples/catsurvivor/captures) |
 | **Shield Drill** | Боевой HUD, обучение щиту и два исхода обрыва связи при выдаче награды. [Рецепт и протокол проверки на телефоне](examples/shield-drill/recipe.md) · [Кадры](examples/shield-drill/captures) |
-| **Relay Dispatch** | Постоянные вкладки прогресса, активностей и событий. Каталог из 30 записей с возвратом к исходной позиции. [Рецепт и проверки](examples/relay-dispatch/recipe.md) · [Кадры](examples/relay-dispatch/captures) |
+| **Relay Dispatch** | Постоянные вкладки, каталог из 30 записей, календарь событий и возвращение после смены сезона. [Рецепт и проверки](examples/relay-dispatch/recipe.md) · [Кадры](examples/relay-dispatch/captures) |
 
 Для сборки демо CatSurvivor нужен доступ к ассетам из отдельной копии проекта CatSurvivor. Скрипт ищет её рядом с MobileUICreator. Если копия находится в другом месте, передайте путь вторым аргументом.
 
@@ -49,6 +49,8 @@ node tools/preview.mjs catsurvivor /path/to/CatSurvivor
 
 Соберите Relay Dispatch командой `node tools/preview.mjs relay-dispatch`. Откройте `.artifacts/relay-dispatch.html`, чтобы продолжить главу или найти «Ночной конвой» в событиях. Команда `node tools/preview.mjs relay-dispatch --with-new-event` создаёт `.artifacts/relay-dispatch-new-event.html` с ещё одним событием в той же вкладке.
 
+В Relay Dispatch откройте «События → Календарь» для проверки сроков и наград. В меню `Demo` выберите «Возвращение после смены сезона», чтобы открыть итоги прежнего события или продолжить сохранённую задачу.
+
 ## Проверки
 
 Запустите проверку Orbital Works с установленным Chromium-браузером.
@@ -59,11 +61,11 @@ node tools/check.mjs orbital-works
 
 Скрипт проверяет рецепты и манифесты, безопасные зоны, переходы и режим уменьшенного движения. Он обновляет PNG-кадры в папке `captures/` соответствующего примера. По умолчанию используется Microsoft Edge на Windows и команда `chromium` на других системах. Чтобы указать другой браузер, задайте путь к нему в переменной окружения `UI_CHROMIUM`.
 
-Команда `node tools/check.mjs shield-drill` проверяет HUD, касания, обучение и однократное начисление в двух сценариях. Команда `node tools/check.mjs relay-dispatch` проверяет три маршрута касаниями, возврат к строке и добавление события. Команда `node tools/check.mjs` проверяет все четыре примера и требует, чтобы копия CatSurvivor находилась рядом с репозиторием. Запросы для оценки поведения скилла собраны в [evals/evals.json](evals/evals.json). Сравнение первого этапа с предыдущей версией записано в [mobile-ux-baseline.md](evals/mobile-ux-baseline.md).
+Команда `node tools/check.mjs shield-drill` проверяет HUD, касания, обучение и однократное начисление в двух сценариях. Команда `node tools/check.mjs relay-dispatch` проверяет навигацию, сезонные сроки, фильтры, подтверждение награды и возвращение к сохранённой задаче. Команда `node tools/check.mjs` проверяет все четыре примера и требует, чтобы копия CatSurvivor находилась рядом с репозиторием. Запросы для оценки поведения скилла собраны в [evals/evals.json](evals/evals.json). Сравнения версий записаны в [mobile-ux-baseline.md](evals/mobile-ux-baseline.md).
 
 ## Роадмап
 
-В [роадмапе](ROADMAP.md) собраны результаты работы над сценариями игрока и навигацией, а также планы по сезонам, возвращению игроков и прозрачному UX гачи и покупок.
+В [роадмапе](ROADMAP.md) собраны результаты работы над сценариями игрока, навигацией и сезонами, а также планы по прозрачному UX гачи и покупок.
 
 ## Лицензия
 
