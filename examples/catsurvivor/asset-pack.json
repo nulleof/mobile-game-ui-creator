@@ -1,6 +1,6 @@
 {
   "id": "dusk-outpost",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "assetRoot": "../../../CatSurvivor",
   "provenance": {
     "style": "Dusk Outpost",
@@ -540,6 +540,38 @@
       "path": "Assets/LastSurvival/UI/Fonts/LilitaOne-Regular.ttf",
       "fit": "font",
       "license": "Assets/LastSurvival/UI/Fonts/LilitaOne - OFL.txt"
+    },
+    "detail-arena": {
+      "path": "Assets/LastSurvival/MetaUI/Art/map/arena_map_30301.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "fit": "contain"
+    },
+    "enemy-walker": {
+      "path": "Assets/LastSurvival/Art/CoreUI/Resources/CoreUI/EnemyPortraits/Enemy_113_Zombie.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "enemy-beaver": {
+      "path": "Assets/LastSurvival/Art/CoreUI/Resources/CoreUI/EnemyPortraits/Enemy_137_ZombieBeaver.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "enemy-king": {
+      "path": "Assets/LastSurvival/Art/CoreUI/Resources/CoreUI/EnemyPortraits/Enemy_139_ZombieKing.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
     }
   }
 }

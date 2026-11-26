@@ -10,7 +10,7 @@ const tuple = (value, length) => Array.isArray(value) && value.length === length
 export async function validateExample(recipe, pack, loadAsset) {
   assert.equal(recipe.pack.id, pack.id, 'Pack ID mismatch');
   assert.equal(recipe.pack.version, pack.version, 'Pack version mismatch');
-  const { design, states, initialState, actions, motion } = recipe;
+  const { design, states, initialState, actions, motion, screens, motionDefaults } = recipe;
   assert.ok(design.width > 0 && Object.keys(design.profiles).length > 0, 'Design profiles are required');
   for (const profile of Object.values(design.profiles)) {
     assert.ok(tuple(profile.viewport, 2) && profile.viewport.every((edge) => edge > 0), 'Invalid viewport');
@@ -19,11 +19,31 @@ export async function validateExample(recipe, pack, loadAsset) {
   assert.ok(Object.hasOwn(states, initialState), 'Initial state missing');
   const assetExists = (id) => assert.ok(Object.hasOwn(pack.assets, id), `Unknown asset: ${id}`);
   const knownStates = (state) => assert.ok(Object.hasOwn(states, state), `Unknown state: ${state}`);
-  const ids = new Set();
-  function visit(nodes) {
+  const screenExists = (id) => assert.ok(Object.hasOwn(screens ?? {}, id), `Unknown screen: ${id}`);
+  const stateBelongsTo = (state, screen) => {
+    knownStates(state);
+    assert.equal(states[state].screen, screen, `State ${state} belongs to a different screen`);
+  };
+  if (screens) {
+    for (const state of Object.values(states)) screenExists(state.screen);
+    for (const [id, screen] of Object.entries(screens)) stateBelongsTo(screen.initial, id);
+  }
+  if (motionDefaults) {
+    for (const key of ['enter', 'exit']) {
+      const timing = motionDefaults[key];
+      assert.ok(numeric(timing?.ms) && timing.ms > 0 && numeric(timing.y), `Invalid visibility timing: ${key}`);
+    }
+  }
+  const ids = new Map();
+  function visit(nodes, root = true, screen) {
     for (const node of nodes) {
       assert.ok(componentId.test(node.id) && !ids.has(node.id), `Invalid or duplicate node ID: ${node.id}`);
-      ids.add(node.id);
+      if (node.screen !== undefined) {
+        assert.ok(root, `Only a root node can declare a screen: ${node.id}`);
+        screenExists(node.screen);
+      }
+      ids.set(node.id, node.screen ?? screen);
+      if (node.visibilityMotion !== undefined) assert.equal(node.visibilityMotion, 'instant');
       for (const box of [node.box, ...Object.values(node.boxes ?? {})]) {
         assert.ok(tuple(box, 4) && box[2] > 0 && box[3] > 0, `Invalid box: ${node.id}`);
       }
@@ -40,15 +60,31 @@ export async function validateExample(recipe, pack, loadAsset) {
       for (const text of [node.text, ...Object.values(node.textByState ?? {})]) {
         if (text?.key) assert.ok(Object.hasOwn(recipe.data, text.key), `Missing fixture: ${text.key}`);
       }
-      if (node.children) visit(node.children);
+      if (node.children) visit(node.children, false, node.screen ?? screen);
     }
   }
   visit(recipe.nodes);
+  for (const [id, action] of Object.entries(actions)) {
+    for (const state of action.from ?? []) knownStates(state);
+    if (action.next) knownStates(action.next);
+    for (const [screen, state] of Object.entries(action.remember ?? {})) {
+      screenExists(screen);
+      stateBelongsTo(state, screen);
+    }
+    if (!action.navigate) continue;
+    const { to, label, focus } = action.navigate;
+    screenExists(to);
+    assert.ok(action.type === 'input' && action.from?.length && label, `Invalid screen action: ${id}`);
+    assert.ok(action.from.every((state) => states[state].screen !== to), `Screen action must change screens: ${id}`);
+    assert.ok(ids.has(focus) && ids.get(focus) === to, `Invalid route focus target: ${id}`);
+    assert.ok(!Object.hasOwn(motion, id), `Screen action and timeline share an ID: ${id}`);
+  }
   const seenMotions = new Set();
   for (const sequence of Object.values(motion)) {
     assert.ok(numeric(sequence.duration) && sequence.duration > 0, 'Motion duration is required');
     if (sequence.trigger) {
       assert.ok(Object.hasOwn(actions, sequence.trigger), `Unknown motion trigger: ${sequence.trigger}`);
+      assert.ok(!actions[sequence.trigger].navigate, 'Screen transitions provide their own timeline');
       assert.ok(!seenMotions.has(sequence.trigger), `Duplicate motion trigger: ${sequence.trigger}`);
       seenMotions.add(sequence.trigger);
     }

@@ -113,7 +113,11 @@ async function browserSession() {
       await run('Input.dispatchMouseEvent', { type: 'mousePressed', x: hit[0], y: hit[1], button: 'left', clickCount: 1 });
       await run('Input.dispatchMouseEvent', { type: 'mouseReleased', x: hit[0], y: hit[1], button: 'left', clickCount: 1 });
     }
-    return { page, read, capture, click, close };
+    const escape = async () => {
+      await run('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+      await run('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    };
+    return { page, read, capture, click, escape, close };
   } catch (error) {
     await close();
     throw error;
@@ -148,15 +152,17 @@ async function assertCopy(browser, ids) {
   assert.deepEqual(errors, [], 'Text exceeds its allocated area');
 }
 
-async function checkRewards(browser, preview) {
-  const logged = () => browser.read('window.preview.counts');
-  const settled = async (state) => until(
-    () => browser.read(`window.preview.state === '${state}' && window.preview.time === undefined`),
-    `Did not settle to ${state}`,
-  );
+const logged = (browser) => browser.read('window.preview.counts');
+const settled = (browser, state) => until(
+  () => browser.read(`window.preview.state === '${state}' && window.preview.time === undefined`),
+  `Did not settle to ${state}`,
+);
+const focus = (browser) => browser.read('document.activeElement.dataset.node');
+
+async function checkRewards(browser, preview, profile) {
   let summary;
   for (const scenario of ['normal', 'skip', 'rapid', 'reduced']) {
-    await browser.page(preview, 'compact', scenario === 'reduced' ? { reduced: '1' } : {});
+    await browser.page(preview, profile, scenario === 'reduced' ? { reduced: '1' } : {});
     await browser.click('reward-trigger');
     if (scenario === 'skip') {
       const { after, at } = preview.recipe.motion.reveal.skip;
@@ -169,38 +175,101 @@ async function checkRewards(browser, preview) {
       await browser.click('reveal-tap');
       await browser.click('reveal-tap');
     }
-    await settled('summary');
-    assert.deepEqual(await logged(), { 'claim-chapter-tasks': 1 });
-    assert.equal(await browser.read('document.activeElement.dataset.node'), 'reward-dismiss');
+    await settled(browser, 'summary');
+    assert.deepEqual(await logged(browser), { 'claim-chapter-tasks': 1 });
+    assert.equal(await focus(browser), 'reward-dismiss');
     const result = await browser.read(`[...document.querySelectorAll('[data-node^="card-value-"] .copy')].map(node => node.textContent)`);
     summary ??= result;
     assert.deepEqual(result, summary);
     await browser.click('reward-dismiss');
-    await settled('claimed');
-    assert.deepEqual(await logged(), { 'claim-chapter-tasks': 1, 'dismiss-last-grant': 1 });
-    assert.equal(await browser.read('document.activeElement.dataset.node'), 'reward-later');
+    await settled(browser, 'claimed');
+    assert.deepEqual(await logged(browser), { 'claim-chapter-tasks': 1, 'dismiss-last-grant': 1 });
+    assert.equal(await focus(browser), 'reward-later');
     assert.equal(await browser.read(`document.querySelector('[data-node="reward-trigger"]').disabled`), true);
-    console.log(`OK reward ${scenario}`);
+    console.log(`OK reward ${profile} ${scenario}`);
   }
-  await browser.page(preview, 'compact', { sequence: 'reveal', t: '2110' });
+  await browser.click('arena-title');
+  await settled(browser, 'chapter-detail');
+  await browser.click('chapter-back');
+  await settled(browser, 'claimed');
+  assert.deepEqual(await logged(browser), { 'claim-chapter-tasks': 1, 'dismiss-last-grant': 1 });
+  await browser.page(preview, profile, { sequence: 'reveal', t: '2110' });
   assert.equal(await browser.read('window.preview.state'), 'summary');
-  assert.deepEqual(await logged(), {});
+  assert.deepEqual(await logged(browser), {});
   await browser.read(`window.preview.seek('reveal', 420)`);
   assert.equal(await browser.read('window.preview.state'), 'chest-flight');
-  assert.deepEqual(await logged(), {});
-  console.log('OK deterministic timeline without game events');
+  assert.deepEqual(await logged(browser), {});
 }
 
-async function checkStation(browser, preview) {
-  await browser.page(preview, 'landscape');
-  await assertBounds(browser);
-  await assertCopy(browser, ['orbital-title', 'sector-heading', 'level-value', 'output-value', 'upgrade-label']);
-  const arts = await browser.read(`[...new Set([...document.querySelectorAll('.art')].map(art => art.dataset.asset))]`);
-  assert.ok(arts.length >= 9, 'Station capture needs independently composed assets');
-  await browser.click('upgrade');
-  await until(() => browser.read("window.preview.state === 'upgraded' && window.preview.time === undefined"), 'Upgrade did not settle');
-  assert.deepEqual(await browser.read('window.preview.counts'), { 'upgrade-sector': 1 });
-  console.log('OK station layout and upgrade');
+async function checkRoute(browser, preview, { profile, enter, back, initial, destination, reduced }) {
+  await browser.page(preview, profile, reduced ? { reduced: '1' } : {});
+  await settled(browser, initial);
+  if (reduced) {
+    await browser.click(enter);
+    assert.equal(await browser.read('window.preview.time'), undefined);
+  } else {
+    const locked = await browser.read(`(() => {
+      const entry = document.querySelector('[data-node="${enter}"]');
+      entry.click();
+      entry.click();
+      document.querySelector('[data-node="${back}"]').click();
+      return [...document.querySelectorAll('.screen:not([hidden])')].every(layer => layer.inert)
+        && document.querySelectorAll('.screen:not([hidden])').length === 2;
+    })()`);
+    assert.ok(locked, 'Both visible layers must suppress taps during a transition');
+  }
+  await settled(browser, destination);
+  assert.equal(await focus(browser), back);
+  await browser.escape();
+  await settled(browser, initial);
+  assert.equal(await focus(browser), enter);
+  assert.deepEqual(await logged(browser), {});
+}
+
+async function checkVisibility(browser, preview) {
+  await browser.page(preview, 'tall', { sequence: 'reveal', t: '80' });
+  async function assertFading() {
+    const hint = await browser.read(`(() => {
+      const node = document.querySelector('[data-node="skip-hint"]');
+      return { visible: !node.hidden, opacity: Number(node.style.opacity) };
+    })()`);
+    assert.ok(hint.visible && hint.opacity > 0 && hint.opacity < 1, 'The hint should interpolate visibility');
+  }
+  await assertFading();
+  await browser.read("window.preview.seek('reveal', 1780)");
+  await assertFading();
+  await browser.read("window.preview.seek('reveal', 1850)");
+  assert.ok(await browser.read(`document.querySelector('[data-node="skip-hint"]').hidden`));
+  assert.deepEqual(await logged(browser), {});
+}
+
+async function checkStation(browser, preview, captures, viewport) {
+  const route = { profile: 'landscape', enter: 'reactor-entry', back: 'reactor-back', initial: 'station', destination: 'ready' };
+  for (const reduced of [false, true]) {
+    await checkRoute(browser, preview, { ...route, reduced });
+    await browser.click('reactor-entry');
+    await settled(browser, 'ready');
+    await assertBounds(browser);
+    await assertCopy(browser, ['orbital-title', 'sector-heading', 'level-value', 'output-value', 'upgrade-label']);
+    const count = await browser.read(`new Set([...document.querySelectorAll('.art')].filter(art => art.getClientRects().length).map(art => art.dataset.asset)).size`);
+    assert.ok(count >= 8, 'Station capture needs independently composed assets');
+    await browser.click('upgrade');
+    await browser.read(`document.querySelector('[data-node="upgrade"]').click()`);
+    await settled(browser, 'upgraded');
+    assert.deepEqual(await logged(browser), { 'upgrade-sector': 1 });
+    await browser.click('reactor-back');
+    await settled(browser, 'station-upgraded');
+    assert.equal(await focus(browser), 'reactor-entry');
+    const overview = await browser.read(`['balance-value', 'overview-reactor-level', 'overview-reactor-output']
+      .map(id => document.querySelector('[data-node="' + id + '"] .copy').textContent.trim())`);
+    assert.deepEqual(overview, ['140', 'Level 03', 'Power output   165']);
+    if (!reduced) await browser.capture(join(captures, 'station-upgraded-landscape.png'), viewport);
+    await browser.click('reactor-entry');
+    await settled(browser, 'upgraded');
+    assert.deepEqual(await logged(browser), { 'upgrade-sector': 1 });
+    assert.ok(await browser.read(`document.querySelector('[data-node="upgrade"]').disabled`));
+  }
+  console.log('OK station navigation, focus, reduced motion and persistent upgrade');
 }
 
 const examples = process.argv[2] ? [process.argv[2]] : ['catsurvivor', 'orbital-works'];
@@ -211,13 +280,16 @@ try {
     const preview = await makePreview(name);
     const captures = resolve(repo, 'examples', name, 'captures');
     for (const [profile, { viewport }] of Object.entries(preview.recipe.design.profiles)) {
-      const states = name === 'catsurvivor' ? ['journey', 'summary'] : [preview.recipe.initialState];
+      const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready'];
       for (const state of states) {
         await browser.page(preview, profile, { state });
         await assertBounds(browser);
         await browser.capture(join(captures, `${state}-${profile}.png`), viewport);
       }
       if (name === 'catsurvivor') {
+        const route = { profile, enter: 'arena-title', back: 'chapter-back', initial: 'journey', destination: 'chapter-detail' };
+        for (const reduced of [false, true]) await checkRoute(browser, preview, { ...route, reduced });
+        await checkRewards(browser, preview, profile);
         await browser.page(preview, profile, { state: 'journey', fixture: 'stress' });
         await assertCopy(browser, ['chapter', 'value-coin']);
         await browser.page(preview, profile, { state: 'summary', fixture: 'stress' });
@@ -226,11 +298,21 @@ try {
       }
     }
     if (name === 'catsurvivor') {
+      const { viewport } = preview.recipe.design.profiles.tall;
       await browser.page(preview, 'tall', { sequence: 'reveal', t: '1880' });
-      await browser.capture(join(captures, 'opening-tall.png'), preview.recipe.design.profiles.tall.viewport);
-      await checkRewards(browser, preview);
+      await browser.capture(join(captures, 'opening-tall.png'), viewport);
+      await checkVisibility(browser, preview);
+      await browser.page(preview, 'tall', { sequence: 'show-enemies', t: '80' });
+      assert.equal(await browser.read('window.preview.screen'), 'chapter');
+      assert.deepEqual(await logged(browser), {});
+      await browser.capture(join(captures, 'transition-enemies-tall.png'), viewport);
     } else {
-      await checkStation(browser, preview);
+      const { viewport } = preview.recipe.design.profiles.landscape;
+      await checkStation(browser, preview, captures, viewport);
+      await browser.page(preview, 'landscape', { sequence: 'open-reactor', t: '80' });
+      assert.equal(await browser.read('window.preview.screen'), 'reactor');
+      assert.deepEqual(await logged(browser), {});
+      await browser.capture(join(captures, 'transition-reactor-landscape.png'), viewport);
     }
     console.log(`OK ${name} PNGs in ${captures}`);
   }

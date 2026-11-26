@@ -7,6 +7,7 @@ main { min-height: 100dvh; display: grid; justify-items: center; align-content: 
 #tools button, #tools select { padding: 4px 8px; }
 #viewport { position: relative; overflow: hidden; background: #111825; }
 #stage { position: absolute; top: 0; left: 0; transform-origin: top left; overflow: hidden; isolation: isolate; color: var(--text); font-family: var(--game-font, system-ui), system-ui, sans-serif; }
+.screen { position: absolute; inset: 0; }
 .element, .art, .copy { position: absolute; }
 .element { display: block; min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: inherit; appearance: none; }
 .element[hidden] { display: none; }

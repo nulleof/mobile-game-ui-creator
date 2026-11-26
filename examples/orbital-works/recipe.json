@@ -49,24 +49,68 @@
     },
     "upgrade-sector": {
       "type": "event",
-      "contract": "Commit one upgrade in the fixture. Use confirmed level, power, balance, and transaction status in the game."
+      "contract": "Commit one upgrade in the fixture. Use confirmed level, power, balance, and transaction status in the game.",
+      "remember": {
+        "overview": "station-upgraded"
+      }
+    },
+    "open-reactor": {
+      "type": "input",
+      "from": [
+        "station",
+        "station-upgraded"
+      ],
+      "navigate": {
+        "to": "reactor",
+        "label": "Station → Reactor sector",
+        "focus": "reactor-back"
+      }
+    },
+    "return-station": {
+      "type": "input",
+      "from": [
+        "ready",
+        "upgraded",
+        "insufficient"
+      ],
+      "navigate": {
+        "to": "overview",
+        "back": true,
+        "label": "Reactor sector → Station",
+        "focus": "reactor-entry"
+      }
     }
   },
   "states": {
     "ready": {
-      "label": "Upgrade available"
+      "label": "Upgrade available",
+      "screen": "reactor",
+      "escape": "return-station"
     },
     "upgrading": {
-      "label": "Upgrade effect"
+      "label": "Upgrade effect",
+      "screen": "reactor"
     },
     "upgraded": {
-      "label": "Upgrade complete"
+      "label": "Upgrade complete",
+      "screen": "reactor",
+      "escape": "return-station"
     },
     "insufficient": {
-      "label": "Insufficient energy"
+      "label": "Insufficient energy",
+      "screen": "reactor",
+      "escape": "return-station"
+    },
+    "station": {
+      "label": "Station · Overview",
+      "screen": "overview"
+    },
+    "station-upgraded": {
+      "label": "Station · Reactor upgraded",
+      "screen": "overview"
     }
   },
-  "initialState": "ready",
+  "initialState": "station",
   "nodes": [
     {
       "id": "station-art",
@@ -98,7 +142,6 @@
         328,
         55
       ],
-      "asset": "panel",
       "qa": "safe",
       "children": [
         {
@@ -109,7 +152,8 @@
             49,
             36
           ],
-          "asset": "orbit"
+          "asset": "orbit",
+          "shadow": "0 3px 4px #000b14"
         },
         {
           "id": "orbital-title",
@@ -139,7 +183,6 @@
         212,
         55
       ],
-      "asset": "panel",
       "qa": "safe",
       "children": [
         {
@@ -150,7 +193,8 @@
             35,
             39
           ],
-          "asset": "energy"
+          "asset": "energy",
+          "shadow": "0 3px 4px #000b14"
         },
         {
           "id": "balance-value",
@@ -176,6 +220,9 @@
             },
             "insufficient": {
               "key": "lowBalance"
+            },
+            "station-upgraded": {
+              "key": "remaining"
             }
           }
         }
@@ -193,7 +240,8 @@
       "visibleIn": [
         "upgrading"
       ],
-      "timelineOnly": true
+      "timelineOnly": true,
+      "screen": "reactor"
     },
     {
       "id": "sector",
@@ -236,6 +284,36 @@
           }
         },
         {
+          "id": "sector-rule-top",
+          "box": [
+            47,
+            118,
+            430,
+            1
+          ],
+          "fill": "linear-gradient(90deg, #4efee099, #bee4e333, #bee4e300)"
+        },
+        {
+          "id": "sector-rule-stats",
+          "box": [
+            50,
+            210,
+            425,
+            1
+          ],
+          "fill": "#72f8e13a"
+        },
+        {
+          "id": "sector-rule-bottom",
+          "box": [
+            50,
+            347,
+            425,
+            1
+          ],
+          "fill": "#72f8e13a"
+        },
+        {
           "id": "level-frame",
           "box": [
             29,
@@ -243,7 +321,6 @@
             464,
             69
           ],
-          "asset": "panel",
           "children": [
             {
               "id": "level-label",
@@ -338,15 +415,14 @@
             464,
             116
           ],
-          "asset": "panel",
           "children": [
             {
               "id": "output-icon",
               "box": [
-                14,
-                23,
-                72,
-                67
+                10,
+                30,
+                65,
+                61
               ],
               "asset": "power"
             },
@@ -639,6 +715,209 @@
             }
           ]
         }
+      ],
+      "screen": "reactor"
+    },
+    {
+      "id": "reactor-back",
+      "box": [
+        640,
+        93,
+        56,
+        58
+      ],
+      "action": "return-station",
+      "label": "Back to station",
+      "qa": "touch",
+      "press": 0.92,
+      "screen": "reactor",
+      "children": [
+        {
+          "id": "reactor-back-icon",
+          "box": [
+            9,
+            13,
+            37,
+            32
+          ],
+          "asset": "arrow",
+          "mirror": true,
+          "shadow": "0 2px 4px #080f13"
+        }
+      ]
+    },
+    {
+      "id": "station-overview",
+      "box": [
+        710,
+        151,
+        510,
+        447
+      ],
+      "screen": "overview",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "station-header",
+          "box": [
+            7,
+            2,
+            490,
+            42
+          ],
+          "text": "STATION OVERVIEW",
+          "font": {
+            "size": 23,
+            "weight": 800,
+            "color": "#7be7d8",
+            "align": "left",
+            "shadow": "0 3px 4px #020e16",
+            "tracking": 3.4
+          }
+        },
+        {
+          "id": "station-name",
+          "box": [
+            4,
+            55,
+            493,
+            113
+          ],
+          "text": "Horizon Station",
+          "font": {
+            "size": 57,
+            "weight": 800,
+            "color": "#eaf9fa",
+            "align": "left",
+            "shadow": "0 3px 4px #020e16",
+            "minSize": 45
+          }
+        },
+        {
+          "id": "overview-rule",
+          "box": [
+            7,
+            177,
+            480,
+            1
+          ],
+          "fill": "linear-gradient(90deg, #6bf9e9b7, #bee4e300)"
+        },
+        {
+          "id": "reactor-entry",
+          "box": [
+            4,
+            215,
+            475,
+            104
+          ],
+          "action": "open-reactor",
+          "label": "Open Reactor Sector",
+          "qa": "touch",
+          "press": 0.96,
+          "children": [
+            {
+              "id": "overview-reactor-icon",
+              "box": [
+                3,
+                9,
+                81,
+                79
+              ],
+              "asset": "reactor",
+              "shadow": "0 0 9px #38eedd55"
+            },
+            {
+              "id": "overview-reactor-name",
+              "box": [
+                102,
+                14,
+                302,
+                40
+              ],
+              "text": "Reactor Sector",
+              "font": {
+                "size": 30,
+                "weight": 800,
+                "color": "#eaf9fa",
+                "align": "left",
+                "shadow": "0 3px 4px #020e16"
+              }
+            },
+            {
+              "id": "overview-reactor-level",
+              "box": [
+                104,
+                57,
+                235,
+                30
+              ],
+              "text": {
+                "key": "level",
+                "prefix": "Level "
+              },
+              "font": {
+                "size": 22,
+                "weight": 800,
+                "color": "#9bd6d5",
+                "align": "left",
+                "shadow": "0 3px 4px #020e16"
+              },
+              "textByState": {
+                "station-upgraded": {
+                  "key": "nextLevel",
+                  "prefix": "Level "
+                }
+              }
+            },
+            {
+              "id": "overview-chevron",
+              "box": [
+                411,
+                30,
+                50,
+                42
+              ],
+              "asset": "arrow"
+            }
+          ]
+        },
+        {
+          "id": "overview-rule-lower",
+          "box": [
+            7,
+            332,
+            480,
+            1
+          ],
+          "fill": "#72f8e134"
+        },
+        {
+          "id": "overview-reactor-output",
+          "box": [
+            8,
+            350,
+            460,
+            38
+          ],
+          "text": {
+            "key": "power",
+            "prefix": "Power output   "
+          },
+          "font": {
+            "size": 24,
+            "weight": 800,
+            "color": "#a5d5d6",
+            "align": "left",
+            "shadow": "0 3px 4px #020e16"
+          },
+          "textByState": {
+            "station-upgraded": {
+              "key": "nextPower",
+              "prefix": "Power output   "
+            }
+          }
+        }
       ]
     }
   ],
@@ -746,6 +1025,24 @@
           ]
         }
       ]
+    }
+  },
+  "screens": {
+    "overview": {
+      "initial": "station"
+    },
+    "reactor": {
+      "initial": "ready"
+    }
+  },
+  "motionDefaults": {
+    "enter": {
+      "ms": 160,
+      "y": 8
+    },
+    "exit": {
+      "ms": 120,
+      "y": -6
     }
   }
 }

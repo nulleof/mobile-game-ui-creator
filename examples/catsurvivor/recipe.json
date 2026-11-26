@@ -3,7 +3,7 @@
   "title": "Journey · Chapter rewards",
   "pack": {
     "id": "dusk-outpost",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "reference": {
     "role": "approved-target",
@@ -59,7 +59,8 @@
     "rewardMessage": "Rewards for completing chapter objectives.",
     "rewardCoin": "1,200",
     "rewardGem": "30",
-    "rewardEnergy": "5"
+    "rewardEnergy": "5",
+    "detailTerrain": "Autumn Woods"
   },
   "fixtures": {
     "stress": {
@@ -97,28 +98,63 @@
     "dismiss-last-grant": {
       "type": "event",
       "contract": "Dismiss LastGrant and restore Journey input."
+    },
+    "show-enemies": {
+      "type": "input",
+      "from": [
+        "journey",
+        "claimed"
+      ],
+      "navigate": {
+        "to": "chapter",
+        "label": "Journey → Chapter enemies",
+        "focus": "chapter-back"
+      }
+    },
+    "return-journey": {
+      "type": "input",
+      "from": [
+        "chapter-detail"
+      ],
+      "navigate": {
+        "to": "journey",
+        "back": true,
+        "label": "Chapter enemies → Journey",
+        "focus": "arena-title"
+      }
     }
   },
   "states": {
     "journey": {
-      "label": "Journey · Reward ready"
+      "label": "Journey · Reward ready",
+      "screen": "journey"
     },
     "chest-flight": {
-      "label": "Chest · Flight and anticipation"
+      "label": "Chest · Flight and anticipation",
+      "screen": "journey"
     },
     "chest-opening": {
-      "label": "Chest · Opening"
+      "label": "Chest · Opening",
+      "screen": "journey"
     },
     "summary": {
       "label": "Rewards · Summary",
-      "escape": "dismiss"
+      "escape": "dismiss",
+      "screen": "journey"
     },
     "closing": {
-      "label": "Rewards · Dismissing"
+      "label": "Rewards · Dismissing",
+      "screen": "journey"
     },
     "claimed": {
       "label": "Journey · Reward collected",
-      "claimed": true
+      "claimed": true,
+      "screen": "journey"
+    },
+    "chapter-detail": {
+      "label": "Chapter · Enemies",
+      "screen": "chapter",
+      "escape": "return-journey"
     }
   },
   "initialState": "journey",
@@ -169,7 +205,6 @@
         113,
         116
       ],
-      "asset": "panel",
       "qa": "safe",
       "children": [
         {
@@ -182,9 +217,11 @@
           ],
           "asset": "avatar",
           "clip": true,
-          "radius": 22
+          "radius": 42
         }
-      ]
+      ],
+      "screen": "journey",
+      "shadow": "0 4px 3px #0b1229aa"
     },
     {
       "id": "player-name",
@@ -203,7 +240,8 @@
         "shadow": "0 3px 1px #101426",
         "align": "left",
         "single": true
-      }
+      },
+      "screen": "journey"
     },
     {
       "id": "xp-track",
@@ -225,7 +263,8 @@
           ],
           "asset": "bar-fill"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "level",
@@ -245,7 +284,8 @@
         "shadow": "0 3px 1px #101426",
         "align": "left",
         "single": true
-      }
+      },
+      "screen": "journey"
     },
     {
       "id": "power-icon",
@@ -255,7 +295,8 @@
         38,
         33
       ],
-      "asset": "power"
+      "asset": "power",
+      "screen": "journey"
     },
     {
       "id": "power",
@@ -275,7 +316,8 @@
         "shadow": "0 3px 1px #101426",
         "align": "left",
         "single": true
-      }
+      },
+      "screen": "journey"
     },
     {
       "id": "resource-energy",
@@ -285,7 +327,6 @@
         138,
         42
       ],
-      "asset": "capsule",
       "qa": "safe",
       "children": [
         {
@@ -332,7 +373,8 @@
             "single": true
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "resource-coin",
@@ -342,7 +384,6 @@
         138,
         42
       ],
-      "asset": "capsule",
       "qa": "safe",
       "children": [
         {
@@ -390,7 +431,8 @@
             "single": true
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "resource-gem",
@@ -400,7 +442,6 @@
         138,
         42
       ],
-      "asset": "capsule",
       "qa": "safe",
       "children": [
         {
@@ -447,7 +488,8 @@
             "single": true
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-news",
@@ -457,34 +499,36 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-news-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            11,
+            1,
+            47,
+            45
           ],
-          "asset": "news"
+          "asset": "news",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "shortcut-news-copy",
           "box": [
-            2,
-            37,
-            65,
-            27
+            0,
+            47,
+            69,
+            22
           ],
           "text": "News",
           "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
+            "size": 17,
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "color": "#fff6db"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-bag",
@@ -494,34 +538,20 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-bag-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            9,
+            4,
+            51,
+            51
           ],
-          "asset": "bag"
-        },
-        {
-          "id": "shortcut-bag-copy",
-          "box": [
-            2,
-            37,
-            65,
-            27
-          ],
-          "text": "Bag",
-          "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
-          }
+          "asset": "bag",
+          "shadow": "0 4px 3px #0b1229aa"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-events",
@@ -531,34 +561,36 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-events-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            11,
+            1,
+            47,
+            45
           ],
-          "asset": "events"
+          "asset": "events",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "shortcut-events-copy",
           "box": [
-            2,
-            37,
-            65,
-            27
+            0,
+            47,
+            69,
+            22
           ],
           "text": "Events",
           "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
+            "size": 17,
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "color": "#fff6db"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-mail",
@@ -568,34 +600,20 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-mail-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            9,
+            4,
+            51,
+            51
           ],
-          "asset": "mail"
-        },
-        {
-          "id": "shortcut-mail-copy",
-          "box": [
-            2,
-            37,
-            65,
-            27
-          ],
-          "text": "Mail",
-          "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
-          }
+          "asset": "mail",
+          "shadow": "0 4px 3px #0b1229aa"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-social",
@@ -605,34 +623,36 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-social-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            11,
+            1,
+            47,
+            45
           ],
-          "asset": "social"
+          "asset": "social",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "shortcut-social-copy",
           "box": [
-            2,
-            37,
-            65,
-            27
+            0,
+            47,
+            69,
+            22
           ],
           "text": "Social",
           "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
+            "size": 17,
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "color": "#fff6db"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "shortcut-menu",
@@ -642,34 +662,20 @@
         69,
         70
       ],
-      "asset": "tab",
       "children": [
         {
           "id": "shortcut-menu-icon",
           "box": [
-            12.8,
-            5,
-            43.4,
-            43.4
+            9,
+            4,
+            51,
+            51
           ],
-          "asset": "menu"
-        },
-        {
-          "id": "shortcut-menu-copy",
-          "box": [
-            2,
-            37,
-            65,
-            27
-          ],
-          "text": "Menu",
-          "font": {
-            "size": 16,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
-          }
+          "asset": "menu",
+          "shadow": "0 4px 3px #0b1229aa"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "chapter",
@@ -696,7 +702,8 @@
         "shadow": "0 5px 1px #101426",
         "minSize": 30
       },
-      "qa": "safe"
+      "qa": "safe",
+      "screen": "journey"
     },
     {
       "id": "supply",
@@ -714,7 +721,6 @@
           86
         ]
       },
-      "asset": "panel-highlight",
       "children": [
         {
           "id": "supply-icon",
@@ -724,7 +730,8 @@
             76,
             88
           ],
-          "asset": "supply-drop"
+          "asset": "supply-drop",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "supply-copy",
@@ -751,7 +758,8 @@
           ],
           "asset": "badge"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "outpost",
@@ -769,7 +777,6 @@
           86
         ]
       },
-      "asset": "panel-highlight",
       "children": [
         {
           "id": "outpost-icon",
@@ -779,7 +786,8 @@
             76,
             88
           ],
-          "asset": "outpost-pass"
+          "asset": "outpost-pass",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "outpost-copy",
@@ -806,7 +814,8 @@
           ],
           "asset": "badge"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "supply-timer",
@@ -824,7 +833,6 @@
           42
         ]
       },
-      "asset": "plate",
       "text": {
         "key": "supplyTimer",
         "prefix": "Reward\n"
@@ -833,7 +841,8 @@
         "size": 17,
         "stroke": "2.6px #101426",
         "shadow": "0 3px 1px #101426"
-      }
+      },
+      "screen": "journey"
     },
     {
       "id": "left",
@@ -851,7 +860,6 @@
           387
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "left-pack",
@@ -861,7 +869,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "left-pack-icon",
@@ -879,7 +886,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "left-pack-copy",
@@ -932,7 +940,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "left-bonus-icon",
@@ -950,7 +957,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "left-bonus-copy",
@@ -993,7 +1001,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "left-event-icon",
@@ -1011,7 +1018,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "left-event-copy",
@@ -1046,7 +1054,8 @@
             ]
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "right",
@@ -1064,7 +1073,6 @@
           387
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "right-quests",
@@ -1074,7 +1082,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "right-quests-icon",
@@ -1092,7 +1099,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "right-quests-copy",
@@ -1135,7 +1143,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "right-progress-icon",
@@ -1153,7 +1160,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "right-progress-copy",
@@ -1196,7 +1204,6 @@
             104,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "right-ranking-icon",
@@ -1214,7 +1221,8 @@
                   68,
                   68
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "right-ranking-copy",
@@ -1249,7 +1257,8 @@
             ]
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "arena-frame",
@@ -1360,9 +1369,14 @@
             "size": 30,
             "stroke": "2.6px #101426",
             "shadow": "0 3px 1px #101426"
-          }
+          },
+          "action": "show-enemies",
+          "label": "View chapter enemies",
+          "qa": "touch",
+          "press": 0.96
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "bonus-feature",
@@ -1380,7 +1394,6 @@
           122
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "bonus-feature-icon",
@@ -1390,7 +1403,8 @@
             112,
             90
           ],
-          "asset": "supply-drop"
+          "asset": "supply-drop",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "bonus-feature-label",
@@ -1407,7 +1421,8 @@
             "shadow": "0 3px 1px #101426"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "patrol-feature",
@@ -1425,7 +1440,6 @@
           116
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "patrol-feature-art",
@@ -1435,7 +1449,10 @@
             200,
             116
           ],
-          "asset": "patrol-art"
+          "asset": "patrol-art",
+          "shadow": "0 4px 3px #0b1229aa",
+          "clip": true,
+          "radius": 16
         },
         {
           "id": "patrol-feature-label",
@@ -1445,12 +1462,12 @@
             190,
             39
           ],
-          "asset": "plate",
           "text": "Patrol",
           "font": {
-            "size": 26,
-            "stroke": "2.6px #101426",
-            "shadow": "0 3px 1px #101426"
+            "size": 27,
+            "color": "#fff6db",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
           }
         },
         {
@@ -1463,7 +1480,8 @@
           ],
           "asset": "badge"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "reward-track",
@@ -1491,7 +1509,6 @@
             153,
             49
           ],
-          "asset": "capsule",
           "children": [
             {
               "id": "track-check",
@@ -1544,7 +1561,6 @@
             185,
             55
           ],
-          "asset": "tab",
           "action": "open",
           "press": 0.95,
           "label": "Claim chapter reward",
@@ -1583,23 +1599,10 @@
                 "single": true
               }
             }
-          ]
-        },
-        {
-          "id": "trigger-flight-base",
-          "box": [
-            194,
-            9,
-            185,
-            55
           ],
-          "asset": "tab",
-          "visibleIn": [
-            "chest-flight",
-            "chest-opening",
-            "summary",
-            "closing"
-          ]
+          "fill": "radial-gradient(ellipse at 22% 66%, #f4a1383d, transparent 66%)",
+          "radius": 15,
+          "visibilityMotion": "instant"
         },
         {
           "id": "track-gap-b",
@@ -1625,7 +1628,6 @@
             136,
             49
           ],
-          "asset": "capsule",
           "children": [
             {
               "id": "reward-later-icon",
@@ -1655,7 +1657,8 @@
           ],
           "focusable": true
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "collection-feature",
@@ -1673,7 +1676,6 @@
           113
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "collection-feature-icon",
@@ -1683,7 +1685,8 @@
             69,
             64
           ],
-          "asset": "collection"
+          "asset": "collection",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "collection-feature-label",
@@ -1700,7 +1703,8 @@
             "shadow": "0 3px 1px #101426"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "left-battle",
@@ -1718,7 +1722,6 @@
           63
         ]
       },
-      "asset": "tab",
       "children": [
         {
           "id": "prev-icon",
@@ -1728,9 +1731,11 @@
             36,
             49
           ],
-          "asset": "arrow-left"
+          "asset": "arrow-left",
+          "shadow": "0 4px 3px #0b1229aa"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "battle",
@@ -1749,7 +1754,7 @@
         ]
       },
       "asset": "primary",
-      "qa": "safe",
+      "qa": "touch",
       "children": [
         {
           "id": "battle-title",
@@ -1794,7 +1799,11 @@
             "align": "left"
           }
         }
-      ]
+      ],
+      "screen": "journey",
+      "action": "show-enemies",
+      "label": "View chapter briefing",
+      "press": 0.96
     },
     {
       "id": "right-battle",
@@ -1812,7 +1821,6 @@
           63
         ]
       },
-      "asset": "tab",
       "children": [
         {
           "id": "next-icon",
@@ -1822,9 +1830,11 @@
             36,
             49
           ],
-          "asset": "arrow-right"
+          "asset": "arrow-right",
+          "shadow": "0 4px 3px #0b1229aa"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "event-tile",
@@ -1842,7 +1852,6 @@
           84
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "event-tile-icon",
@@ -1852,7 +1861,8 @@
             52,
             51
           ],
-          "asset": "event"
+          "asset": "event",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "event-tile-copy",
@@ -1879,7 +1889,8 @@
           ],
           "asset": "badge"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "challenge-tile",
@@ -1897,7 +1908,6 @@
           84
         ]
       },
-      "asset": "panel",
       "children": [
         {
           "id": "challenge-tile-icon",
@@ -1907,7 +1917,8 @@
             52,
             51
           ],
-          "asset": "challenge"
+          "asset": "challenge",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "challenge-tile-copy",
@@ -1934,7 +1945,8 @@
           ],
           "asset": "badge"
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "message-bubble",
@@ -1958,7 +1970,8 @@
         "size": 20,
         "stroke": "2.6px #101426",
         "shadow": "0 3px 1px #101426"
-      }
+      },
+      "screen": "journey"
     },
     {
       "id": "chat",
@@ -2007,7 +2020,8 @@
             "single": true
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "help",
@@ -2025,7 +2039,6 @@
           53
         ]
       },
-      "asset": "plate",
       "children": [
         {
           "id": "help-icon",
@@ -2035,7 +2048,8 @@
             38,
             39
           ],
-          "asset": "help"
+          "asset": "help",
+          "shadow": "0 4px 3px #0b1229aa"
         },
         {
           "id": "help-copy",
@@ -2052,7 +2066,8 @@
             "shadow": "0 3px 1px #101426"
           }
         }
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "navigation",
@@ -2070,7 +2085,6 @@
           111
         ]
       },
-      "asset": "panel",
       "qa": "safe",
       "children": [
         {
@@ -2081,7 +2095,6 @@
             126,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "nav-tile-shop-icon",
@@ -2099,7 +2112,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-shop-copy",
@@ -2152,7 +2166,6 @@
             126,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "nav-tile-heroes-icon",
@@ -2170,7 +2183,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-heroes-copy",
@@ -2223,8 +2237,45 @@
             126,
             132
           ],
-          "asset": "tab-active",
           "children": [
+            {
+              "id": "chapter-tab-halo",
+              "box": [
+                9,
+                31,
+                108,
+                73
+              ],
+              "asset": "glow",
+              "opacity": 0.57,
+              "boxes": {
+                "compact": [
+                  11,
+                  23,
+                  104,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "chapter-tab-mark",
+              "box": [
+                47,
+                128,
+                32,
+                4
+              ],
+              "fill": "#ffb958",
+              "radius": 2,
+              "boxes": {
+                "compact": [
+                  47,
+                  97,
+                  32,
+                  4
+                ]
+              }
+            },
             {
               "id": "nav-tile-chapters-icon",
               "box": [
@@ -2241,7 +2292,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-chapters-copy",
@@ -2255,7 +2307,8 @@
               "font": {
                 "size": 21,
                 "stroke": "2.6px #101426",
-                "shadow": "0 3px 1px #101426"
+                "shadow": "0 3px 1px #101426",
+                "color": "#ffd47a"
               },
               "boxes": {
                 "compact": [
@@ -2284,7 +2337,6 @@
             126,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "nav-tile-skills-icon",
@@ -2302,7 +2354,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-skills-copy",
@@ -2345,7 +2398,6 @@
             126,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "nav-tile-base-icon",
@@ -2363,7 +2415,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-base-copy",
@@ -2416,7 +2469,6 @@
             126,
             132
           ],
-          "asset": "tab",
           "children": [
             {
               "id": "nav-tile-clan-icon",
@@ -2434,7 +2486,8 @@
                   62,
                   64
                 ]
-              }
+              },
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "nav-tile-clan-copy",
@@ -2470,7 +2523,9 @@
           },
           "opacity": 0.78
         }
-      ]
+      ],
+      "screen": "journey",
+      "fill": "linear-gradient(0deg, #111b32fc, #121d32d0 48%, #121d3200)"
     },
     {
       "id": "reveal-dim",
@@ -2496,7 +2551,8 @@
         "chest-opening",
         "summary",
         "closing"
-      ]
+      ],
+      "screen": "journey"
     },
     {
       "id": "reveal-art",
@@ -2646,7 +2702,8 @@
           "opacity": 0
         }
       ],
-      "timelineOnly": true
+      "timelineOnly": true,
+      "screen": "journey"
     },
     {
       "id": "reveal-tap",
@@ -2670,7 +2727,9 @@
       "visibleIn": [
         "chest-flight",
         "chest-opening"
-      ]
+      ],
+      "screen": "journey",
+      "visibilityMotion": "instant"
     },
     {
       "id": "skip-hint",
@@ -2688,7 +2747,6 @@
           61
         ]
       },
-      "asset": "plate",
       "text": "Tap to skip",
       "font": {
         "size": 24,
@@ -2698,7 +2756,8 @@
       "visibleIn": [
         "chest-flight"
       ],
-      "passThrough": true
+      "passThrough": true,
+      "screen": "journey"
     },
     {
       "id": "reward-dialog",
@@ -2733,12 +2792,12 @@
             488,
             93
           ],
-          "asset": "plate",
           "text": "CHAPTER REWARDS",
           "font": {
-            "size": 42,
-            "stroke": "3.8px #101426",
-            "shadow": "0 3px 1px #101426"
+            "size": 41,
+            "color": "#ffe2a0",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
           }
         },
         {
@@ -2767,7 +2826,6 @@
             178,
             213
           ],
-          "asset": "panel",
           "children": [
             {
               "id": "card-icon-coin",
@@ -2777,7 +2835,8 @@
                 108,
                 99
               ],
-              "asset": "coin"
+              "asset": "coin",
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "card-value-coin",
@@ -2825,7 +2884,6 @@
             178,
             213
           ],
-          "asset": "panel",
           "children": [
             {
               "id": "card-icon-gem",
@@ -2835,7 +2893,8 @@
                 108,
                 99
               ],
-              "asset": "gem"
+              "asset": "gem",
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "card-value-gem",
@@ -2882,7 +2941,6 @@
             178,
             213
           ],
-          "asset": "panel",
           "children": [
             {
               "id": "card-icon-energy",
@@ -2892,7 +2950,8 @@
                 108,
                 99
               ],
-              "asset": "energy"
+              "asset": "energy",
+              "shadow": "0 4px 3px #0b1229aa"
             },
             {
               "id": "card-value-energy",
@@ -2951,7 +3010,300 @@
             "shadow": "0 3px 1px #101426"
           }
         }
-      ]
+      ],
+      "screen": "journey"
+    },
+    {
+      "id": "chapter-vignette",
+      "box": [
+        0,
+        0,
+        800,
+        1731
+      ],
+      "space": "screen",
+      "fill": "linear-gradient(180deg, #0d1627cd, #0d162744 42%, #0d1627ee 83%)",
+      "boxes": {
+        "compact": [
+          0,
+          0,
+          800,
+          1423
+        ]
+      },
+      "screen": "chapter"
+    },
+    {
+      "id": "chapter-back",
+      "box": [
+        13,
+        13,
+        72,
+        72
+      ],
+      "action": "return-journey",
+      "label": "Back to Journey",
+      "qa": "touch",
+      "press": 0.93,
+      "children": [
+        {
+          "id": "chapter-back-icon",
+          "box": [
+            14,
+            14,
+            43,
+            44
+          ],
+          "asset": "arrow-left",
+          "shadow": "0 4px 3px #0b1229aa"
+        }
+      ],
+      "screen": "chapter"
+    },
+    {
+      "id": "chapter-detail-kicker",
+      "box": [
+        146,
+        31,
+        484,
+        55
+      ],
+      "text": "CHAPTER 3",
+      "font": {
+        "size": 35,
+        "color": "#ffd996",
+        "stroke": "2.8px #0b1428",
+        "shadow": "0 3px 3px #0d1328bf"
+      },
+      "screen": "chapter"
+    },
+    {
+      "id": "chapter-terrain",
+      "box": [
+        35,
+        117,
+        706,
+        94
+      ],
+      "text": {
+        "key": "detailTerrain"
+      },
+      "font": {
+        "size": 74,
+        "color": "#fff6db",
+        "stroke": "2.8px #0b1428",
+        "shadow": "0 3px 3px #0d1328bf",
+        "minSize": 56
+      },
+      "screen": "chapter"
+    },
+    {
+      "id": "chapter-map",
+      "box": [
+        25,
+        220,
+        726,
+        676
+      ],
+      "asset": "detail-arena",
+      "shadow": "0 17px 15px #10172cee",
+      "boxes": {
+        "compact": [
+          33,
+          203,
+          710,
+          537
+        ]
+      },
+      "screen": "chapter"
+    },
+    {
+      "id": "enemy-guide",
+      "box": [
+        27,
+        931,
+        722,
+        377
+      ],
+      "qa": "safe",
+      "boxes": {
+        "compact": [
+          27,
+          763,
+          722,
+          348
+        ]
+      },
+      "fill": "linear-gradient(0deg, #15203922, #18254470 68%, #17284200)",
+      "radius": 32,
+      "children": [
+        {
+          "id": "enemy-guide-title",
+          "box": [
+            24,
+            0,
+            674,
+            75
+          ],
+          "text": "ENEMIES",
+          "font": {
+            "size": 51,
+            "color": "#fff6db",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
+          }
+        },
+        {
+          "id": "enemy-guide-divider",
+          "box": [
+            307,
+            85,
+            108,
+            3
+          ],
+          "fill": "#ffc468",
+          "radius": 2
+        },
+        {
+          "id": "chapter-walker-portrait",
+          "box": [
+            59,
+            106,
+            152,
+            150
+          ],
+          "asset": "enemy-walker",
+          "shadow": "0 4px 3px #0b1229aa",
+          "clip": true,
+          "radius": 77
+        },
+        {
+          "id": "chapter-walker-name",
+          "box": [
+            18,
+            256,
+            228,
+            39
+          ],
+          "text": "Walker",
+          "font": {
+            "size": 26,
+            "color": "#fff6db",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "minSize": 21
+          }
+        },
+        {
+          "id": "chapter-walker-role",
+          "box": [
+            18,
+            299,
+            228,
+            30
+          ],
+          "text": "Melee",
+          "font": {
+            "size": 21,
+            "color": "#e2bc80",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
+          }
+        },
+        {
+          "id": "chapter-beaver-portrait",
+          "box": [
+            288,
+            106,
+            152,
+            150
+          ],
+          "asset": "enemy-beaver",
+          "shadow": "0 4px 3px #0b1229aa",
+          "clip": true,
+          "radius": 77
+        },
+        {
+          "id": "chapter-beaver-name",
+          "box": [
+            247,
+            256,
+            228,
+            39
+          ],
+          "text": "Blighted Beaver",
+          "font": {
+            "size": 26,
+            "color": "#fff6db",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "minSize": 21
+          }
+        },
+        {
+          "id": "chapter-beaver-role",
+          "box": [
+            247,
+            299,
+            228,
+            30
+          ],
+          "text": "Fast",
+          "font": {
+            "size": 21,
+            "color": "#e2bc80",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
+          }
+        },
+        {
+          "id": "chapter-king-portrait",
+          "box": [
+            517,
+            106,
+            152,
+            150
+          ],
+          "asset": "enemy-king",
+          "shadow": "0 4px 3px #0b1229aa",
+          "clip": true,
+          "radius": 77
+        },
+        {
+          "id": "chapter-king-name",
+          "box": [
+            476,
+            256,
+            228,
+            39
+          ],
+          "text": "Zombie King",
+          "font": {
+            "size": 26,
+            "color": "#fff6db",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf",
+            "minSize": 21
+          }
+        },
+        {
+          "id": "chapter-king-role",
+          "box": [
+            476,
+            299,
+            228,
+            30
+          ],
+          "text": "Boss",
+          "font": {
+            "size": 21,
+            "color": "#e2bc80",
+            "stroke": "2.8px #0b1428",
+            "shadow": "0 3px 3px #0d1328bf"
+          }
+        }
+      ],
+      "screen": "chapter"
     }
   ],
   "motion": {
@@ -3977,6 +4329,24 @@
           ]
         }
       ]
+    }
+  },
+  "motionDefaults": {
+    "enter": {
+      "ms": 160,
+      "y": 8
+    },
+    "exit": {
+      "ms": 120,
+      "y": -6
+    }
+  },
+  "screens": {
+    "journey": {
+      "initial": "journey"
+    },
+    "chapter": {
+      "initial": "chapter-detail"
     }
   }
 }
