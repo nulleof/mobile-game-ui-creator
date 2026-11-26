@@ -243,6 +243,72 @@ async function checkVisibility(browser, preview) {
   assert.deepEqual(await logged(browser), {});
 }
 
+async function checkReactorImpacts(browser, preview, captures, viewport) {
+  await browser.page(preview, 'landscape', { sequence: 'upgrade', t: '0' });
+  async function sample(time, ...ids) {
+    return browser.read(`(() => {
+      window.preview.seek('upgrade', ${time});
+      return ${JSON.stringify(ids)}.map(id => {
+        const element = document.querySelector('[data-node="' + id + '"]');
+        const transform = getComputedStyle(element).transform;
+        return {
+          visible: !element.hidden,
+          opacity: Number(element.style.opacity),
+          text: element.querySelector('.copy')?.textContent,
+          asset: element.querySelector('.art')?.dataset.asset,
+          left: element.offsetLeft,
+          x: transform === 'none' ? 0 : new DOMMatrix(transform).m41,
+        };
+      });
+    })()`);
+  }
+  const expectations = {
+    'cost-applied': ['text', '380', '140'],
+    'level-landed': ['text', '02', '03'],
+    'power-landed': ['text', '120', '165'],
+    'fifth-filled': ['asset', 'progress-track', 'progress-fill'],
+    'sixth-filled': ['asset', 'progress-track', 'progress-fill'],
+  };
+  for (const { event, target, effect, at, end } of preview.recipe.motion.upgrade.impacts) {
+    const [peakTarget, peakEffect] = await sample(at, target, effect);
+    const [after] = await sample(at + 20, effect);
+    const [rest] = await sample(end, effect);
+    assert.ok(peakEffect.visible && peakEffect.opacity > after.opacity && after.opacity > rest.opacity, `Missing impact and decay: ${event}`);
+    assert.equal(rest.opacity, 0);
+    if (at === 0) continue;
+    const [beforeTarget, beforeEffect] = await sample(at - 1, target, effect);
+    assert.equal(beforeEffect.opacity, 0, `Effect starts ahead of its change: ${event}`);
+    const expected = expectations[event];
+    if (expected) {
+      const [property, prior, next] = expected;
+      assert.deepEqual([beforeTarget[property], peakTarget[property]], [prior, next], event);
+    }
+  }
+
+  for (const [id, forecast, start, landing, value] of [
+    ['level-value', 'level-next', 140, 380, '03'],
+    ['output-value', 'output-next', 210, 450, '165'],
+  ]) {
+    const [origin] = await sample(start, forecast);
+    const [mid] = await sample((start + landing) / 2, forecast);
+    const [approach] = await sample(landing - 1, forecast);
+    const [departed, applied] = await sample(landing, forecast, id);
+    assert.equal(origin.x, 0);
+    assert.ok(mid.visible && mid.text === value && mid.x < 0 && approach.x < mid.x, `Missing transfer: ${forecast}`);
+    assert.ok(Math.abs(approach.left + approach.x - applied.left) < 0.1, `Value misses destination: ${forecast}`);
+    assert.ok(!departed.visible && applied.visible && applied.text === value, `Transfer handoff failed: ${forecast}`);
+  }
+
+  const [fifth, sixth, button] = await sample(600, 'meter-5', 'meter-6', 'upgrade-status');
+  assert.deepEqual([fifth.asset, sixth.asset, button.text], ['progress-fill', 'progress-fill', 'UPGRADED']);
+  assert.deepEqual(await logged(browser), {});
+  for (const [name, time] of [['upgrade-transfer', 300], ['upgrade-landing', 450], ['upgrade-impact', 520]]) {
+    await sample(time);
+    await browser.capture(join(captures, `${name}-landscape.png`), viewport);
+  }
+  console.log('OK reactor value transfer and synchronized impacts');
+}
+
 async function checkStation(browser, preview, captures, viewport) {
   const route = { profile: 'landscape', enter: 'reactor-entry', back: 'reactor-back', initial: 'station', destination: 'ready' };
   for (const reduced of [false, true]) {
@@ -254,6 +320,10 @@ async function checkStation(browser, preview, captures, viewport) {
     const count = await browser.read(`new Set([...document.querySelectorAll('.art')].filter(art => art.getClientRects().length).map(art => art.dataset.asset)).size`);
     assert.ok(count >= 8, 'Station capture needs independently composed assets');
     await browser.click('upgrade');
+    if (reduced) {
+      assert.equal(await browser.read('window.preview.time'), undefined);
+      assert.ok(await browser.read(`document.querySelector('[data-node="output-flare"]').hidden`));
+    }
     await browser.read(`document.querySelector('[data-node="upgrade"]').click()`);
     await settled(browser, 'upgraded');
     assert.deepEqual(await logged(browser), { 'upgrade-sector': 1 });
@@ -280,7 +350,7 @@ try {
     const preview = await makePreview(name);
     const captures = resolve(repo, 'examples', name, 'captures');
     for (const [profile, { viewport }] of Object.entries(preview.recipe.design.profiles)) {
-      const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready'];
+      const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready', 'upgraded'];
       for (const state of states) {
         await browser.page(preview, profile, { state });
         await assertBounds(browser);
@@ -309,6 +379,7 @@ try {
     } else {
       const { viewport } = preview.recipe.design.profiles.landscape;
       await checkStation(browser, preview, captures, viewport);
+      await checkReactorImpacts(browser, preview, captures, viewport);
       await browser.page(preview, 'landscape', { sequence: 'open-reactor', t: '80' });
       assert.equal(await browser.read('window.preview.screen'), 'reactor');
       assert.deepEqual(await logged(browser), {});

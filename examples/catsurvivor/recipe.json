@@ -492,6 +492,20 @@
       "screen": "journey"
     },
     {
+      "id": "shortcut-surface",
+      "box": [
+        326,
+        46,
+        450,
+        88
+      ],
+      "asset": "panel",
+      "opacity": 0.74,
+      "passThrough": true,
+      "screen": "journey",
+      "qa": "safe"
+    },
+    {
       "id": "shortcut-news",
       "box": [
         331,
@@ -751,15 +765,16 @@
         {
           "id": "supply-badge",
           "box": [
-            159,
-            -5,
+            151,
+            5,
             23,
             23
           ],
           "asset": "badge"
         }
       ],
-      "screen": "journey"
+      "screen": "journey",
+      "asset": "tab"
     },
     {
       "id": "outpost",
@@ -807,15 +822,16 @@
         {
           "id": "outpost-badge",
           "box": [
-            159,
-            -5,
+            151,
+            5,
             23,
             23
           ],
           "asset": "badge"
         }
       ],
-      "screen": "journey"
+      "screen": "journey",
+      "asset": "tab"
     },
     {
       "id": "supply-timer",
@@ -861,6 +877,26 @@
         ]
       },
       "children": [
+        {
+          "id": "left-surface",
+          "box": [
+            0,
+            0,
+            127,
+            474
+          ],
+          "boxes": {
+            "compact": [
+              0,
+              0,
+              127,
+              387
+            ]
+          },
+          "asset": "panel",
+          "opacity": 0.76,
+          "passThrough": true
+        },
         {
           "id": "left-pack",
           "box": [
@@ -1074,6 +1110,26 @@
         ]
       },
       "children": [
+        {
+          "id": "right-surface",
+          "box": [
+            0,
+            0,
+            127,
+            474
+          ],
+          "boxes": {
+            "compact": [
+              0,
+              0,
+              127,
+              387
+            ]
+          },
+          "asset": "panel",
+          "opacity": 0.76,
+          "passThrough": true
+        },
         {
           "id": "right-quests",
           "box": [
@@ -1704,7 +1760,8 @@
           }
         }
       ],
-      "screen": "journey"
+      "screen": "journey",
+      "asset": "panel"
     },
     {
       "id": "left-battle",
@@ -1890,7 +1947,8 @@
           "asset": "badge"
         }
       ],
-      "screen": "journey"
+      "screen": "journey",
+      "asset": "panel"
     },
     {
       "id": "challenge-tile",
@@ -1946,7 +2004,8 @@
           "asset": "badge"
         }
       ],
-      "screen": "journey"
+      "screen": "journey",
+      "asset": "panel"
     },
     {
       "id": "message-bubble",
@@ -2087,6 +2146,121 @@
       },
       "qa": "safe",
       "children": [
+        {
+          "id": "nav-surface",
+          "box": [
+            0,
+            0,
+            776,
+            142
+          ],
+          "boxes": {
+            "compact": [
+              0,
+              0,
+              776,
+              111
+            ]
+          },
+          "asset": "panel",
+          "opacity": 0.89,
+          "passThrough": true
+        },
+        {
+          "id": "nav-divider-1",
+          "box": [
+            129,
+            21,
+            1.5,
+            100
+          ],
+          "boxes": {
+            "compact": [
+              129,
+              17,
+              1.5,
+              78
+            ]
+          },
+          "fill": "linear-gradient(180deg, transparent, #a9b9dd6b 42%, #a9b9dd6b 60%, transparent)",
+          "passThrough": true
+        },
+        {
+          "id": "nav-divider-2",
+          "box": [
+            258,
+            21,
+            1.5,
+            100
+          ],
+          "boxes": {
+            "compact": [
+              258,
+              17,
+              1.5,
+              78
+            ]
+          },
+          "fill": "linear-gradient(180deg, transparent, #a9b9dd6b 42%, #a9b9dd6b 60%, transparent)",
+          "passThrough": true
+        },
+        {
+          "id": "nav-divider-3",
+          "box": [
+            387,
+            21,
+            1.5,
+            100
+          ],
+          "boxes": {
+            "compact": [
+              387,
+              17,
+              1.5,
+              78
+            ]
+          },
+          "fill": "linear-gradient(180deg, transparent, #a9b9dd6b 42%, #a9b9dd6b 60%, transparent)",
+          "passThrough": true
+        },
+        {
+          "id": "nav-divider-4",
+          "box": [
+            516,
+            21,
+            1.5,
+            100
+          ],
+          "boxes": {
+            "compact": [
+              516,
+              17,
+              1.5,
+              78
+            ]
+          },
+          "fill": "linear-gradient(180deg, transparent, #a9b9dd6b 42%, #a9b9dd6b 60%, transparent)",
+          "passThrough": true
+        },
+        {
+          "id": "nav-divider-5",
+          "box": [
+            645,
+            21,
+            1.5,
+            100
+          ],
+          "boxes": {
+            "compact": [
+              645,
+              17,
+              1.5,
+              78
+            ]
+          },
+          "fill": "linear-gradient(180deg, transparent, #a9b9dd6b 42%, #a9b9dd6b 60%, transparent)",
+          "passThrough": true
+        },
         {
           "id": "nav-tile-shop",
           "box": [
@@ -2524,8 +2698,7 @@
           "opacity": 0.78
         }
       ],
-      "screen": "journey",
-      "fill": "linear-gradient(0deg, #111b32fc, #121d32d0 48%, #121d3200)"
+      "screen": "journey"
     },
     {
       "id": "reveal-dim",

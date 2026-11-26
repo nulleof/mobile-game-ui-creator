@@ -105,6 +105,10 @@ export async function validateExample(recipe, pack, loadAsset) {
         previous = step.at;
       }
     }
+    for (const { event, target, effect, at, end } of sequence.impacts ?? []) {
+      assert.ok(event && ids.has(target) && ids.has(effect), `Invalid impact target: ${event}`);
+      assert.ok(validTime(at, 0) && validTime(end, at) && end > at, `Invalid impact timing: ${event}`);
+    }
     for (const track of sequence.tracks) {
       assert.ok(ids.has(track.node) && properties.has(track.property), `Invalid track: ${track.node}/${track.property}`);
       for (const [profile, keys] of Object.entries({ default: track.keys, ...track.keysByProfile })) {

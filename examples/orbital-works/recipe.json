@@ -88,7 +88,7 @@
       "escape": "return-station"
     },
     "upgrading": {
-      "label": "Upgrade effect",
+      "label": "Reactor · Press and confirm",
       "screen": "reactor"
     },
     "upgraded": {
@@ -108,6 +108,22 @@
     "station-upgraded": {
       "label": "Station · Reactor upgraded",
       "screen": "overview"
+    },
+    "transfer": {
+      "label": "Reactor · Transfer values",
+      "screen": "reactor"
+    },
+    "level-applied": {
+      "label": "Reactor · Level applied",
+      "screen": "reactor"
+    },
+    "power-applied": {
+      "label": "Reactor · Power applied",
+      "screen": "reactor"
+    },
+    "first-segment": {
+      "label": "Reactor · Fifth segment",
+      "screen": "reactor"
     }
   },
   "initialState": "station",
@@ -186,6 +202,19 @@
       "qa": "safe",
       "children": [
         {
+          "id": "balance-flare",
+          "box": [
+            108,
+            -9,
+            106,
+            75
+          ],
+          "fill": "radial-gradient(ellipse, #47fcdf90, #28d9c23b 43%, #13eee000 73%)",
+          "timelineOnly": true,
+          "opacity": 0,
+          "passThrough": true
+        },
+        {
           "id": "balance-icon",
           "box": [
             16,
@@ -223,8 +252,21 @@
             },
             "station-upgraded": {
               "key": "remaining"
+            },
+            "transfer": {
+              "key": "remaining"
+            },
+            "level-applied": {
+              "key": "remaining"
+            },
+            "power-applied": {
+              "key": "remaining"
+            },
+            "first-segment": {
+              "key": "remaining"
             }
-          }
+          },
+          "origin": "100% 50%"
         }
       ]
     },
@@ -238,10 +280,15 @@
       ],
       "asset": "pulse",
       "visibleIn": [
-        "upgrading"
+        "transfer",
+        "level-applied",
+        "power-applied",
+        "first-segment",
+        "upgraded"
       ],
       "timelineOnly": true,
-      "screen": "reactor"
+      "screen": "reactor",
+      "visibilityMotion": "instant"
     },
     {
       "id": "sector",
@@ -323,6 +370,19 @@
           ],
           "children": [
             {
+              "id": "level-flare",
+              "box": [
+                132,
+                -4,
+                134,
+                74
+              ],
+              "fill": "radial-gradient(ellipse, #47fcdf90, #28d9c23b 43%, #13eee000 73%)",
+              "timelineOnly": true,
+              "opacity": 0,
+              "passThrough": true
+            },
+            {
               "id": "level-label",
               "box": [
                 21,
@@ -362,6 +422,15 @@
               "textByState": {
                 "upgraded": {
                   "key": "nextLevel"
+                },
+                "level-applied": {
+                  "key": "nextLevel"
+                },
+                "power-applied": {
+                  "key": "nextLevel"
+                },
+                "first-segment": {
+                  "key": "nextLevel"
                 }
               }
             },
@@ -376,16 +445,17 @@
               "asset": "arrow",
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer"
               ]
             },
             {
               "id": "level-next",
               "box": [
-                317,
+                356,
                 0,
-                120,
+                82,
                 67
               ],
               "text": {
@@ -395,14 +465,15 @@
                 "size": 42,
                 "weight": 800,
                 "single": true,
-                "align": "right",
+                "align": "center",
                 "shadow": "0 2px 5px #011010",
                 "color": "#6cfbda"
               },
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer"
               ]
             }
           ]
@@ -416,6 +487,19 @@
             116
           ],
           "children": [
+            {
+              "id": "output-flare",
+              "box": [
+                70,
+                37,
+                156,
+                78
+              ],
+              "fill": "radial-gradient(ellipse, #47fcdf90, #28d9c23b 43%, #13eee000 73%)",
+              "timelineOnly": true,
+              "opacity": 0,
+              "passThrough": true
+            },
             {
               "id": "output-icon",
               "box": [
@@ -467,8 +551,15 @@
               "textByState": {
                 "upgraded": {
                   "key": "nextPower"
+                },
+                "power-applied": {
+                  "key": "nextPower"
+                },
+                "first-segment": {
+                  "key": "nextPower"
                 }
-              }
+              },
+              "origin": "0% 50%"
             },
             {
               "id": "output-arrow",
@@ -481,16 +572,18 @@
               "asset": "arrow",
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer",
+                "level-applied"
               ]
             },
             {
               "id": "output-next",
               "box": [
-                310,
+                350,
                 43,
-                127,
+                118,
                 65
               ],
               "text": {
@@ -500,14 +593,17 @@
                 "size": 43,
                 "weight": 800,
                 "single": true,
-                "align": "right",
+                "align": "left",
                 "shadow": "0 2px 5px #011010",
-                "color": "#6cfbda"
+                "color": "#6cfbda",
+                "minSize": 31
               },
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer",
+                "level-applied"
               ]
             }
           ]
@@ -523,6 +619,32 @@
           "asset": "progress-track",
           "children": [
             {
+              "id": "meter-5-flare",
+              "box": [
+                246,
+                -13,
+                80,
+                66
+              ],
+              "fill": "radial-gradient(ellipse, #47fcdf90, #28d9c23b 43%, #13eee000 73%)",
+              "timelineOnly": true,
+              "opacity": 0,
+              "passThrough": true
+            },
+            {
+              "id": "meter-6-flare",
+              "box": [
+                307,
+                -13,
+                80,
+                66
+              ],
+              "fill": "radial-gradient(ellipse, #47fcdf90, #28d9c23b 43%, #13eee000 73%)",
+              "timelineOnly": true,
+              "opacity": 0,
+              "passThrough": true
+            },
+            {
               "id": "meter-1",
               "box": [
                 13,
@@ -535,7 +657,11 @@
                 "ready": "progress-fill",
                 "upgrading": "progress-fill",
                 "upgraded": "progress-fill",
-                "insufficient": "progress-fill"
+                "insufficient": "progress-fill",
+                "transfer": "progress-fill",
+                "level-applied": "progress-fill",
+                "power-applied": "progress-fill",
+                "first-segment": "progress-fill"
               }
             },
             {
@@ -551,7 +677,11 @@
                 "ready": "progress-fill",
                 "upgrading": "progress-fill",
                 "upgraded": "progress-fill",
-                "insufficient": "progress-fill"
+                "insufficient": "progress-fill",
+                "transfer": "progress-fill",
+                "level-applied": "progress-fill",
+                "power-applied": "progress-fill",
+                "first-segment": "progress-fill"
               }
             },
             {
@@ -567,7 +697,11 @@
                 "ready": "progress-fill",
                 "upgrading": "progress-fill",
                 "upgraded": "progress-fill",
-                "insufficient": "progress-fill"
+                "insufficient": "progress-fill",
+                "transfer": "progress-fill",
+                "level-applied": "progress-fill",
+                "power-applied": "progress-fill",
+                "first-segment": "progress-fill"
               }
             },
             {
@@ -583,7 +717,11 @@
                 "ready": "progress-fill",
                 "upgrading": "progress-fill",
                 "upgraded": "progress-fill",
-                "insufficient": "progress-fill"
+                "insufficient": "progress-fill",
+                "transfer": "progress-fill",
+                "level-applied": "progress-fill",
+                "power-applied": "progress-fill",
+                "first-segment": "progress-fill"
               }
             },
             {
@@ -596,7 +734,8 @@
               ],
               "asset": "progress-track",
               "assetByState": {
-                "upgraded": "progress-fill"
+                "upgraded": "progress-fill",
+                "first-segment": "progress-fill"
               }
             },
             {
@@ -641,15 +780,36 @@
           "assetByState": {
             "upgrading": "button-pressed",
             "upgraded": "button-disabled",
-            "insufficient": "button-disabled"
+            "insufficient": "button-disabled",
+            "transfer": "button-pressed",
+            "level-applied": "button-pressed",
+            "power-applied": "button-pressed",
+            "first-segment": "button-pressed"
           },
           "disabledIn": [
             "upgrading",
             "upgraded",
-            "insufficient"
+            "insufficient",
+            "transfer",
+            "level-applied",
+            "power-applied",
+            "first-segment"
           ],
           "press": 0.98,
           "children": [
+            {
+              "id": "upgrade-glint",
+              "box": [
+                15,
+                3,
+                434,
+                75
+              ],
+              "fill": "radial-gradient(ellipse at 50% 17%, #fff1abdd, #ffc24759 34%, #ffb73100 69%)",
+              "timelineOnly": true,
+              "opacity": 0,
+              "passThrough": true
+            },
             {
               "id": "upgrade-label",
               "box": [
@@ -669,10 +829,42 @@
                 "minSize": 24
               },
               "textByState": {
-                "upgrading": "UPGRADING",
-                "upgraded": "UPGRADED",
                 "insufficient": "INSUFFICIENT ENERGY"
-              }
+              },
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            },
+            {
+              "id": "upgrade-status",
+              "box": [
+                13,
+                24,
+                438,
+                61
+              ],
+              "text": "UPGRADING",
+              "font": {
+                "size": 39,
+                "weight": 800,
+                "single": true,
+                "align": "center",
+                "shadow": "0 2px 5px #011010",
+                "tracking": 1.5,
+                "minSize": 24
+              },
+              "textByState": {
+                "upgraded": "UPGRADED"
+              },
+              "visibleIn": [
+                "transfer",
+                "level-applied",
+                "power-applied",
+                "first-segment",
+                "upgraded"
+              ]
             },
             {
               "id": "cost-icon",
@@ -685,8 +877,10 @@
               "asset": "energy",
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer",
+                "level-applied"
               ]
             },
             {
@@ -709,8 +903,10 @@
               },
               "visibleIn": [
                 "ready",
+                "insufficient",
                 "upgrading",
-                "insufficient"
+                "transfer",
+                "level-applied"
               ]
             }
           ]
@@ -925,26 +1121,597 @@
     "upgrade": {
       "label": "Reactor recalibration",
       "trigger": "upgrade",
-      "duration": 660,
+      "duration": 820,
       "phases": [
         {
           "at": 0,
           "state": "upgrading"
         },
         {
-          "at": 660,
+          "at": 140,
+          "state": "transfer"
+        },
+        {
+          "at": 380,
+          "state": "level-applied"
+        },
+        {
+          "at": 450,
+          "state": "power-applied"
+        },
+        {
+          "at": 520,
+          "state": "first-segment"
+        },
+        {
+          "at": 600,
           "state": "upgraded"
         }
       ],
       "events": [
         {
-          "at": 660,
+          "at": 140,
           "action": "upgrade-sector"
         }
       ],
       "reduced": "finish",
       "interrupt": "Serialise one upgrade per station. On engine interruption, re-read the authoritative upgrade status.",
       "tracks": [
+        {
+          "node": "upgrade-glint",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0.86
+            ],
+            [
+              135,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "balance-flare",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              140,
+              0.8,
+              "step"
+            ],
+            [
+              315,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "level-flare",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              380,
+              1,
+              "step"
+            ],
+            [
+              576,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "output-flare",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              450,
+              1,
+              "step"
+            ],
+            [
+              648,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-5-flare",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              520,
+              0.88,
+              "step"
+            ],
+            [
+              710,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-6-flare",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              600,
+              0.88,
+              "step"
+            ],
+            [
+              820,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.965
+            ],
+            [
+              48,
+              0.965
+            ],
+            [
+              126,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              0.965
+            ],
+            [
+              48,
+              0.965
+            ],
+            [
+              126,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "balance-value",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              140,
+              1.1,
+              "step"
+            ],
+            [
+              295,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "balance-value",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              140,
+              1.1,
+              "step"
+            ],
+            [
+              295,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "level-next",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              140,
+              0
+            ],
+            [
+              380,
+              -198,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "output-next",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              210,
+              0
+            ],
+            [
+              450,
+              -246,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "level-value",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              250,
+              1
+            ],
+            [
+              300,
+              0,
+              "outCubic"
+            ],
+            [
+              380,
+              1,
+              "step"
+            ]
+          ]
+        },
+        {
+          "node": "output-value",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              320,
+              1
+            ],
+            [
+              370,
+              0,
+              "outCubic"
+            ],
+            [
+              450,
+              1,
+              "step"
+            ]
+          ]
+        },
+        {
+          "node": "level-value",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              380,
+              1.12,
+              "step"
+            ],
+            [
+              537,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "level-value",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              380,
+              1.12,
+              "step"
+            ],
+            [
+              537,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "output-value",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              450,
+              1.12,
+              "step"
+            ],
+            [
+              610,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "output-value",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              450,
+              1.12,
+              "step"
+            ],
+            [
+              610,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "level-arrow",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              140,
+              1
+            ],
+            [
+              240,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "output-arrow",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              210,
+              1
+            ],
+            [
+              310,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "cost-icon",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              140,
+              1
+            ],
+            [
+              209,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-cost",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              140,
+              1
+            ],
+            [
+              209,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-5",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              520,
+              1.17,
+              "step"
+            ],
+            [
+              683,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-5",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              520,
+              1.17,
+              "step"
+            ],
+            [
+              683,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-6",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              600,
+              1.17,
+              "step"
+            ],
+            [
+              763,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "meter-6",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              600,
+              1.17,
+              "step"
+            ],
+            [
+              763,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-status",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              600,
+              1.04,
+              "step"
+            ],
+            [
+              755,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-status",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              600,
+              1.04,
+              "step"
+            ],
+            [
+              755,
+              1,
+              "outCubic"
+            ]
+          ]
+        },
         {
           "node": "station-pulse",
           "property": "opacity",
@@ -954,16 +1721,12 @@
               0
             ],
             [
-              120,
-              0.86,
-              "outQuad"
+              140,
+              0.27,
+              "step"
             ],
             [
-              235,
-              0.95
-            ],
-            [
-              660,
+              590,
               0,
               "outCubic"
             ]
@@ -975,16 +1738,15 @@
           "keys": [
             [
               0,
-              0.56
+              0.68
             ],
             [
-              235,
-              1,
-              "outBack"
+              140,
+              0.68
             ],
             [
-              660,
-              1.4,
+              590,
+              1.23,
               "outCubic"
             ]
           ]
@@ -995,34 +1757,155 @@
           "keys": [
             [
               0,
-              0.56
+              0.68
             ],
             [
-              235,
-              1,
-              "outBack"
+              140,
+              0.68
             ],
             [
-              660,
-              1.4,
+              590,
+              1.23,
               "outCubic"
             ]
           ]
         },
         {
-          "node": "station-pulse",
-          "property": "rotate",
+          "node": "level-next",
+          "property": "y",
           "keys": [
             [
               0,
-              -8
+              0
             ],
             [
-              660,
-              23,
-              "outQuad"
+              140,
+              0
+            ],
+            [
+              240,
+              -15,
+              "smooth"
+            ],
+            [
+              380,
+              0,
+              "smooth"
             ]
           ]
+        },
+        {
+          "node": "output-next",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              210,
+              0
+            ],
+            [
+              310,
+              -15,
+              "smooth"
+            ],
+            [
+              450,
+              0,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-label",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              105,
+              1
+            ],
+            [
+              139,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-status",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              140,
+              0
+            ],
+            [
+              240,
+              1,
+              "outCubic"
+            ]
+          ]
+        }
+      ],
+      "impacts": [
+        {
+          "event": "touch",
+          "target": "upgrade",
+          "effect": "upgrade-glint",
+          "at": 0,
+          "end": 135
+        },
+        {
+          "event": "cost-applied",
+          "target": "balance-value",
+          "effect": "balance-flare",
+          "at": 140,
+          "end": 315
+        },
+        {
+          "event": "reactor-confirmed",
+          "target": "station-art",
+          "effect": "station-pulse",
+          "at": 140,
+          "end": 590
+        },
+        {
+          "event": "level-landed",
+          "target": "level-value",
+          "effect": "level-flare",
+          "at": 380,
+          "end": 576
+        },
+        {
+          "event": "power-landed",
+          "target": "output-value",
+          "effect": "output-flare",
+          "at": 450,
+          "end": 648
+        },
+        {
+          "event": "fifth-filled",
+          "target": "meter-5",
+          "effect": "meter-5-flare",
+          "at": 520,
+          "end": 710
+        },
+        {
+          "event": "sixth-filled",
+          "target": "meter-6",
+          "effect": "meter-6-flare",
+          "at": 600,
+          "end": 820
         }
       ]
     }

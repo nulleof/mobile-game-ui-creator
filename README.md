@@ -26,7 +26,7 @@ node tools/preview.mjs orbital-works
 
 Откройте `.artifacts/catsurvivor.html` или `.artifacts/orbital-works.html`. В HTML встроены данные и арт. CatSurvivor при сборке читается из соседнего checkout. Если он лежит в другом месте, передайте его путь вторым аргументом, например `node tools/preview.mjs catsurvivor C:/Games/CatSurvivor`.
 
-В режиме Interactive нажмите Enemies в Journey или Reactor Sector на станции. Стрелка и Escape возвращают на исходный экран. В CatSurvivor можно открыть и пропустить сундук, затем закрыть награду. В Orbital Works можно улучшить реактор и увидеть результат на обзоре. В Timeline можно выбрать переход или анимацию и остановиться на конкретном кадре.
+В режиме Interactive нажмите Enemies в Journey или Reactor Sector на станции. Стрелка и Escape возвращают на исходный экран. В CatSurvivor можно открыть и пропустить сундук, затем закрыть награду. В Orbital Works можно улучшить реактор и увидеть результат на обзоре. В Timeline можно выбрать переход или анимацию и остановиться на конкретном кадре. Ключевые моменты улучшения отмечены в рецепте. [Перелёт и посадка значений](examples/orbital-works/recipe.md#акценты-улучшения)
 
 ## Проверка
 
