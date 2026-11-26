@@ -25,7 +25,7 @@ MobileUICreator — скилл `$mobile-ui-creator` для Codex, который
 node tools/preview.mjs orbital-works
 ```
 
-Откройте `.artifacts/orbital-works.html` в браузере. HTML содержит все данные и ассеты. В режиме `Interactive` откройте `Reactor Sector` и улучшите реактор. В меню `Timeline` можно просмотреть отдельные кадры переходов и анимаций, а в `Loading demo` — попробовать разные состояния загрузки.
+Откройте `.artifacts/orbital-works.html` в браузере. HTML содержит все данные и ассеты. В режиме `Interactive` откройте `Reactor Sector` и улучшите реактор. В меню `Timeline` можно просмотреть отдельные кадры переходов и анимаций, а в `Demo` — попробовать разные состояния загрузки.
 
 ## Примеры
 
@@ -33,6 +33,7 @@ node tools/preview.mjs orbital-works
 | --- | --- |
 | **Orbital Works** | Обзор орбитальной станции, улучшение реактора и состояния загрузки. [Рецепт](examples/orbital-works/recipe.md) · [Концепты и исходники](examples/orbital-works/generation.md) · [Кадры](examples/orbital-works/captures) |
 | **CatSurvivor** | Портретный экран Journey, детали главы и открытие сундука. [Рецепт](examples/catsurvivor/recipe.md) · [Кадры](examples/catsurvivor/captures) |
+| **Shield Drill** | Боевой HUD, обучение щиту и два исхода обрыва связи при выдаче награды. [Рецепт и протокол проверки на телефоне](examples/shield-drill/recipe.md) · [Кадры](examples/shield-drill/captures) |
 
 Для сборки демо CatSurvivor нужен доступ к ассетам из отдельной копии проекта CatSurvivor. Скрипт ищет её рядом с MobileUICreator. Если копия находится в другом месте, передайте путь вторым аргументом.
 
@@ -41,7 +42,9 @@ node tools/preview.mjs catsurvivor
 node tools/preview.mjs catsurvivor /path/to/CatSurvivor
 ```
 
-Откройте `.artifacts/catsurvivor.html`, чтобы перейти из Journey в детали главы через `Enemies` и попробовать открыть сундук или пропустить анимацию. В обоих демо стрелка назад или `Esc` возвращает на предыдущий экран.
+Откройте `.artifacts/catsurvivor.html`, чтобы перейти из Journey в детали главы через `Enemies` и попробовать открыть сундук или пропустить анимацию. В CatSurvivor и Orbital Works стрелка назад или `Esc` возвращает на предыдущий экран.
+
+Соберите Shield Drill командой `node tools/preview.mjs shield-drill`. Откройте `.artifacts/shield-drill.html`. В `Demo` можно перейти к самостоятельной попытке или выбрать один из двух вариантов обрыва связи. `Data → long-label` включает длинную подпись кнопки щита.
 
 ## Проверки
 
@@ -53,7 +56,7 @@ node tools/check.mjs orbital-works
 
 Скрипт проверяет рецепты и манифесты, безопасные зоны, переходы и режим уменьшенного движения. Он обновляет PNG-кадры в папке `captures/` соответствующего примера. По умолчанию используется Microsoft Edge на Windows и команда `chromium` на других системах. Чтобы указать другой браузер, задайте путь к нему в переменной окружения `UI_CHROMIUM`.
 
-Команда `node tools/check.mjs` проверяет оба примера и требует, чтобы копия CatSurvivor находилась рядом с репозиторием. Запросы для отдельной проверки поведения скилла собраны в [evals/evals.json](evals/evals.json).
+Команда `node tools/check.mjs shield-drill` проверяет HUD, касания, обучение и однократное начисление в двух сценариях. Команда `node tools/check.mjs` проверяет все три примера и требует, чтобы копия CatSurvivor находилась рядом с репозиторием. Запросы для оценки поведения скилла собраны в [evals/evals.json](evals/evals.json). Сравнение с предыдущей версией записано в [mobile-ux-baseline.md](evals/mobile-ux-baseline.md).
 
 ## Лицензия
 

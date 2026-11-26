@@ -1,0 +1,14 @@
+{
+  "id": "relay-drill",
+  "version": "1.0.0",
+  "provenance": {
+    "scene": "Original station backdrop generated with ImageGen. HUD and effects are separate recipe layers."
+  },
+  "assets": {
+    "bay": {
+      "path": "assets/relay-bay.png",
+      "size": [1024, 1536],
+      "fit": "cover"
+    }
+  }
+}

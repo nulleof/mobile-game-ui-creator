@@ -4,7 +4,7 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promise
 import { dirname, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { makePreview } from './preview.mjs';
+import { examples, makePreview } from './preview.mjs';
 
 const repo = fileURLToPath(new URL('..', import.meta.url));
 const artifacts = resolve(repo, '.artifacts');
@@ -80,9 +80,10 @@ async function browserSession() {
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
       return result.value;
     }
-    async function page(preview, profile, settings = {}) {
+    async function page(preview, profile, { touch = false, ...settings } = {}) {
       const [width, height] = preview.recipe.design.profiles[profile].viewport;
-      await run('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+      await run('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: touch });
+      await run('Emulation.setTouchEmulationEnabled', { enabled: touch });
       await run('Emulation.setEmulatedMedia', {
         features: [{ name: 'prefers-reduced-motion', value: settings.reduced ? 'reduce' : 'no-preference' }],
       });
@@ -102,7 +103,7 @@ async function browserSession() {
       await mkdir(dirname(path), { recursive: true });
       await writeFile(path, png);
     }
-    async function click(id) {
+    async function point(id) {
       const hit = await read(`(() => {
         const target = document.querySelector('[data-node="${id}"]');
         const box = target.getBoundingClientRect();
@@ -110,22 +111,36 @@ async function browserSession() {
         const y = box.y + box.height / 2;
         return [x, y, target.contains(document.elementFromPoint(x, y))];
       })()`);
-      assert.ok(hit[2], `Click hit another layer: ${id}`);
-      await run('Input.dispatchMouseEvent', { type: 'mousePressed', x: hit[0], y: hit[1], button: 'left', clickCount: 1 });
-      await run('Input.dispatchMouseEvent', { type: 'mouseReleased', x: hit[0], y: hit[1], button: 'left', clickCount: 1 });
+      assert.ok(hit[2], `Input hit another layer: ${id}`);
+      return hit;
+    }
+    async function click(id) {
+      const [x, y] = await point(id);
+      await run('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
+      await run('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+    }
+    async function tapAt(x, y) {
+      await run('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+      await run('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+    async function tap(id) {
+      const [x, y] = await point(id);
+      await tapAt(x, y);
+      return [x, y];
     }
     const escape = async () => {
       await run('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
       await run('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     };
-    return { page, read, capture, click, escape, close };
+    const lifecycle = (state) => run('Page.setWebLifecycleState', { state });
+    return { page, read, capture, click, tapAt, tap, lifecycle, escape, close };
   } catch (error) {
     await close();
     throw error;
   }
 }
 
-async function assertBounds(browser) {
+async function assertBounds(browser, minTouch = 44) {
   const errors = await browser.read(`Array.from(document.querySelectorAll('[data-qa]')).flatMap(element => {
     if (!element.getClientRects().length) return [];
     const stage = document.querySelector('#stage');
@@ -135,7 +150,7 @@ async function assertBounds(browser) {
     const rect = element.getBoundingClientRect();
     const ok = rect.left >= outer.left + left * scale - 1 && rect.right <= outer.right - right * scale + 1 &&
       rect.top >= outer.top + top * scale - 1 && rect.bottom <= outer.bottom - bottom * scale + 1;
-    const touch = element.dataset.qa !== 'touch' || Math.min(rect.width, rect.height) / scale >= 44;
+    const touch = element.dataset.qa !== 'touch' || Math.min(rect.width, rect.height) / scale >= ${minTouch} - 0.01;
     return ok && touch ? [] : [element.dataset.node];
   })`);
   assert.deepEqual(errors, [], 'Design elements exceed safe insets or the touch fixture is too small');
@@ -398,7 +413,7 @@ async function checkLoading(browser, preview, captures, viewport) {
   })()`);
   async function choose(id) {
     await browser.read(`(() => {
-      const option = document.querySelector('select[aria-label="Loading demo"]');
+      const option = document.querySelector('select[aria-label="Demo"]');
       option.value = '${id}';
       option.dispatchEvent(new Event('change'));
     })()`);
@@ -453,13 +468,151 @@ async function checkLoading(browser, preview, captures, viewport) {
   console.log('OK measured, held, unknown, paused, done and reduced progress states');
 }
 
-const examples = process.argv[2] ? [process.argv[2]] : ['catsurvivor', 'orbital-works'];
+async function freezeAndResume(browser, expectedState) {
+  await browser.read(`(() => {
+    window.lifecycleEvents = [];
+    for (const type of ['freeze', 'resume']) {
+      document.addEventListener(type, () => window.lifecycleEvents.push(type), { once: true });
+    }
+  })()`);
+  await browser.lifecycle('frozen');
+  await browser.lifecycle('active');
+  await settled(browser, expectedState);
+  assert.deepEqual(await browser.read('window.lifecycleEvents'), ['freeze', 'resume']);
+}
+
+async function checkDrillSuspension(preview) {
+  for (const { demo, state, visible, hidden, claim, counts } of [
+    { state: 'guided', visible: 'guided-note', counts: {} },
+    { demo: 'practice', state: 'practice', visible: 'shield-practice', hidden: 'guided-note', counts: {} },
+    {
+      demo: 'lost-after-commit', state: 'lost-committed', claim: 'claim-commit',
+      visible: 'retry-after-commit', counts: { 'request-reward': 1, 'grant-reward': 1 },
+    },
+  ]) {
+    // A forced freeze leaves headless Chromium's input and navigation unreliable.
+    const browser = await browserSession();
+    try {
+      await browser.page(preview, 'compact', { touch: true, ...(demo ? { demo } : {}) });
+      if (claim) await browser.tap(claim);
+      await settled(browser, state);
+      await freezeAndResume(browser, state);
+      assert.deepEqual(await logged(browser), counts);
+      assert.equal(await browser.read(`document.querySelector('[data-node="${visible}"]').hidden`), false);
+      if (hidden) assert.equal(await browser.read(`document.querySelector('[data-node="${hidden}"]').hidden`), true);
+    } finally {
+      await browser.close();
+    }
+  }
+  console.log('OK tutorial and pending reward survive browser freeze and resume');
+}
+
+async function checkShieldDrill(browser, preview, captures) {
+  const touch = { touch: true };
+  const copy = (id) => browser.read(`document.querySelector('[data-node="${id}"] .copy').textContent`);
+  const visible = (id) => browser.read(`!document.querySelector('[data-node="${id}"]').closest('[hidden]')`);
+
+  for (const [profile, { viewport }] of Object.entries(preview.recipe.design.profiles)) {
+    for (const [state, button, options] of [
+      ['guided', 'shield-guided', {}],
+      ['practice', 'shield-practice', { fixture: 'long-label' }],
+      ['complete', 'replay', {}],
+    ]) {
+      await browser.page(preview, profile, { ...touch, state, ...options });
+      await assertBounds(browser, 48);
+      await assertCopy(browser, ['relay-title', 'integrity', button]);
+      await browser.capture(join(captures, `${state}-${profile}.png`), viewport);
+    }
+  }
+
+  await browser.page(preview, 'compact', { ...touch, demo: 'practice', fixture: 'long-label' });
+  assert.ok(await browser.read("'ontouchstart' in window && navigator.maxTouchPoints > 0"));
+  assert.equal(await copy('shield-practice'), 'Schutzschild aktivieren');
+  assert.equal(await visible('guided-note'), false);
+  await browser.tapAt(160, 270);
+  await settled(browser, 'practice');
+  assert.deepEqual(await logged(browser), {});
+  await browser.tap('shield-practice');
+  await settled(browser, 'complete');
+  assert.deepEqual([await copy('final-status'), await copy('integrity')], ['Shot deflected', '100%']);
+  assert.deepEqual(await logged(browser), { 'deflect-shot': 1 });
+  assert.equal(await focus(browser), 'final-status');
+
+  await browser.tap('replay');
+  await settled(browser, 'guided');
+  assert.equal(await visible('guided-note'), true);
+  await browser.tap('skip');
+  await settled(browser, 'free');
+  assert.equal(await visible('shield-practice'), true);
+  assert.equal(await visible('guided-note'), false);
+  await browser.tap('replay');
+  await settled(browser, 'guided');
+  await browser.tap('shield-guided');
+  await settled(browser, 'practice');
+  assert.equal(await visible('guided-note'), false);
+  await browser.tap('shield-practice');
+  await settled(browser, 'complete');
+  assert.deepEqual(await logged(browser), { 'deflect-shot': 3 });
+
+  await browser.page(preview, 'compact', { ...touch, reduced: '1' });
+  await browser.tap('shield-guided');
+  await settled(browser, 'practice');
+  assert.equal(await transform(browser, 'shot-core'), '');
+  await browser.tap('shield-practice');
+  await settled(browser, 'complete');
+  assert.equal(await copy('final-status'), 'Shot deflected');
+  console.log('OK shield touch, off-target tap, guided and independent shots, skip and replay, reduced motion');
+
+  for (const branch of [
+    { committed: true, demo: 'lost-after-commit', claim: 'claim-commit', lost: 'lost-committed', retry: 'retry-after-commit' },
+    { committed: false, demo: 'lost-before-commit', claim: 'claim-uncommitted', lost: 'lost-uncommitted', retry: 'retry-before-commit' },
+  ]) {
+    await browser.page(preview, 'compact', { ...touch, demo: branch.demo, reduced: branch.committed ? '1' : '0' });
+    const { initialBalance, reward, confirmedBalance } = preview.recipe.data;
+    assert.equal(await copy('reward-before'), `Balance: ${initialBalance} Alloy`);
+    const claimPoint = await browser.tap(branch.claim);
+    await browser.tapAt(...claimPoint);
+    await settled(browser, branch.lost);
+    assert.equal(await browser.read('window.preview.claimed'), branch.committed);
+    assert.match(await copy('reward-offline'), /Connection lost/);
+    assert.equal(await visible('reward-confirmed'), false);
+    const retryPoint = await browser.tap(branch.retry);
+    await browser.tapAt(...retryPoint);
+    await settled(browser, 'received');
+    assert.equal(await focus(browser), 'reward-confirmed');
+    await browser.tapAt(...retryPoint);
+    assert.equal(confirmedBalance, initialBalance + reward);
+    assert.equal(await copy('reward-confirmed'), `Reward received.\nBalance: ${confirmedBalance} Alloy`);
+    assert.equal(await browser.read('window.preview.claimed'), true);
+    assert.deepEqual(await logged(browser), {
+      'request-reward': 1, 'check-status': 1, 'grant-reward': 1,
+      ...(branch.committed ? {} : { 'retry-reward': 1 }),
+    });
+    console.log(`OK ${branch.demo}, one grant after repeat taps`);
+  }
+  await browser.page(preview, 'compact', { ...touch, sequence: 'recover-uncommitted', t: '650' });
+  assert.deepEqual(await logged(browser), {});
+  assert.equal(await browser.read('window.preview.claimed'), false);
+  await browser.page(preview, 'compact', { ...touch, state: 'received' });
+  await assertBounds(browser, 48);
+  await assertCopy(browser, ['reward-confirmed']);
+  await browser.capture(join(captures, 'reward-compact.png'), [320, 568]);
+
+  await checkDrillSuspension(preview);
+}
+
+const selectedExamples = process.argv[2] ? [process.argv[2]] : examples;
 await mkdir(artifacts, { recursive: true });
 const browser = await browserSession();
 try {
-  for (const name of examples) {
+  for (const name of selectedExamples) {
     const preview = await makePreview(name);
     const captures = resolve(repo, 'examples', name, 'captures');
+    if (name === 'shield-drill') {
+      await checkShieldDrill(browser, preview, captures);
+      console.log(`OK ${name} PNGs in ${captures}`);
+      continue;
+    }
     for (const [profile, { viewport }] of Object.entries(preview.recipe.design.profiles)) {
       const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready', 'upgraded', 'station-upgraded'];
       for (const state of states) {

@@ -33,3 +33,16 @@ Each profile declares `viewport` [width, height] and `safeInsets` [top, right, b
 - The preview can expose a `previewDemos` entry with `label`, starting `state`, and optional `motion` for scripted progress. Such a sequence can set `allowLoops: true` to run an activity indication while it applies preview-only states. It has no trigger or gameplay events. Use `reduced: "play"` for real or simulated state updates that must still occur while visual loops are suppressed.
 
 Record a QA pass with a real rendered frame. Test both supported extremes of viewport and safe insets, long localized text where applicable, larger numbers, and legibility over art or gameplay. Inspect input capture on modal open, Skip and Back behavior, interrupted transitions, and final focus. Triggering an animation should never grant a reward twice. Stepping through frames should never dispatch an action.
+
+## Mobile QA report
+
+In `recipe.md`, record the scenario, profile or device, build or browser, and evidence. Mark each applicable check as passed, failed, or pending. Link rendered frames and include the steps and observed result for interactive checks. Use the [player scenario and playtest guide](mobile-ux.md) for a first-attempt task.
+
+| Check | Evidence to capture |
+| --- | --- |
+| Touch targets and reach | Measure both dimensions of the actual hit area. Use 44 × 44 pt for frequent iOS game controls and 48 × 48 dp on Android as platform targets. Verify the game's logical-to-native mapping in a native build. Exercise edge gestures, adjacent buttons, and simultaneous input where relevant with the intended grip. |
+| Gameplay readability | Check important HUD text, icons and focus in light, dark and busy frames. Record the background or contrast measurement for critical labels. Give important status changes a text or shape cue in addition to color. With reduced motion or sound off, check that the result remains perceivable. |
+| Localization | Render long localized or expanded strings and large values on the narrowest supported profile. Check glyph coverage, wrapping and the agreed minimum text size. For right-to-left locales, check reading order, mixed text and numbers, and direction-dependent controls. |
+| Browser and device scope | Label desktop browser, browser touch emulation, mobile browser on a named device, or native build on a named device. Leave physical reach, actual OS gesture interaction, and native scaling pending until observed where applicable. |
+
+[Apple Game Controls](https://developer.apple.com/design/human-interface-guidelines/game-controls) · [Android Accessibility](https://developer.android.com/guide/topics/ui/accessibility/views/apps-views) · [Android Edge-to-edge](https://developer.android.com/design/ui/mobile/guides/layout-and-content/edge-to-edge) · [Xbox Accessibility Guidelines](https://learn.microsoft.com/en-us/xbox/accessibility/guidelines) · [Android Pseudolocales](https://developer.android.com/guide/topics/resources/pseudolocales)

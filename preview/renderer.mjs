@@ -633,7 +633,7 @@ async function mount(pack, recipe) {
     fixture = value;
     draw();
   });
-  const demoControl = demos.length ? select('Loading demo', [
+  const demoControl = demos.length ? select('Demo', [
     ['', 'Off'], ...demos.map(([id, entry]) => [id, entry.label]),
   ], '', openDemo) : null;
   let timeline;

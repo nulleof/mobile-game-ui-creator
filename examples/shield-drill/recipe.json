@@ -1,0 +1,1098 @@
+{
+  "id": "shield-drill",
+  "title": "Shield Drill · Relay 07",
+  "pack": {
+    "id": "relay-drill",
+    "version": "1.0.0"
+  },
+  "design": {
+    "width": 320,
+    "profiles": {
+      "compact": {
+        "viewport": [320, 568],
+        "safeInsets": [24, 0, 20, 0]
+      },
+      "tall": {
+        "viewport": [390, 844],
+        "safeInsets": [47, 0, 34, 0]
+      }
+    }
+  },
+  "theme": {
+    "text": "#f2f8fa"
+  },
+  "data": {
+    "shield": "Shield",
+    "initialBalance": 120,
+    "reward": 50,
+    "confirmedBalance": 170
+  },
+  "fixtures": {
+    "long-label": {
+      "shield": "Schutzschild aktivieren"
+    }
+  },
+  "actions": {
+    "guided-shield": {
+      "type": "input",
+      "from": [
+        "guided"
+      ]
+    },
+    "practice-shield": {
+      "type": "input",
+      "from": [
+        "practice",
+        "free"
+      ]
+    },
+    "skip-drill": {
+      "type": "input",
+      "from": [
+        "guided"
+      ]
+    },
+    "replay-drill": {
+      "type": "input",
+      "from": [
+        "practice",
+        "free",
+        "complete"
+      ]
+    },
+    "request-committed": {
+      "type": "input",
+      "from": [
+        "offer-committed"
+      ]
+    },
+    "request-uncommitted": {
+      "type": "input",
+      "from": [
+        "offer-uncommitted"
+      ]
+    },
+    "retry-committed": {
+      "type": "input",
+      "from": [
+        "lost-committed"
+      ]
+    },
+    "retry-uncommitted": {
+      "type": "input",
+      "from": [
+        "lost-uncommitted"
+      ]
+    },
+    "deflect-shot": {
+      "type": "event",
+      "contract": "The gameplay fixture confirms one projectile was deflected."
+    },
+    "request-reward": {
+      "type": "event",
+      "contract": "Submit the pending claim using the current operation identity."
+    },
+    "check-status": {
+      "type": "event",
+      "contract": "Reconcile the original pending operation."
+    },
+    "retry-reward": {
+      "type": "event",
+      "contract": "Submit the same operation after status reports it was not applied."
+    },
+    "grant-reward": {
+      "type": "event",
+      "contract": "Record one authoritative grant in the preview fixture.",
+      "setsClaimed": true
+    }
+  },
+  "states": {
+    "guided": {
+      "label": "Guided shot"
+    },
+    "guided-hit": {
+      "label": "Guided shot deflected"
+    },
+    "practice": {
+      "label": "Independent shot · bright arena"
+    },
+    "free": {
+      "label": "Drill skipped · free play"
+    },
+    "final-hit": {
+      "label": "Independent shot deflected"
+    },
+    "complete": {
+      "label": "Drill complete"
+    },
+    "offer-committed": {
+      "label": "Reward available · response will be lost"
+    },
+    "offer-uncommitted": {
+      "label": "Reward available · request will be interrupted"
+    },
+    "sending": {
+      "label": "Sending reward request"
+    },
+    "lost-committed": {
+      "label": "Connection lost · reward committed"
+    },
+    "lost-uncommitted": {
+      "label": "Connection lost · reward uncommitted"
+    },
+    "checking": {
+      "label": "Checking reward status"
+    },
+    "received": {
+      "label": "Reward confirmed"
+    }
+  },
+  "initialState": "guided",
+  "nodes": [
+    {
+      "id": "scene",
+      "box": [0, 0, 320, 568],
+      "boxes": {
+        "tall": [0, 0, 320, 693]
+      },
+      "space": "screen",
+      "asset": "bay",
+      "passThrough": true
+    },
+    {
+      "id": "arena-light",
+      "box": [0, 0, 320, 568],
+      "boxes": {
+        "tall": [0, 0, 320, 693]
+      },
+      "space": "screen",
+      "visibleIn": [
+        "practice",
+        "final-hit",
+        "complete"
+      ],
+      "passThrough": true,
+      "fill": "radial-gradient(ellipse at 68% 13%, #e5ffffd9 0%, #9aecebb6 16%, #53c7e48c 34%, #50acb41f 70%)"
+    },
+    {
+      "id": "arena-alert",
+      "box": [0, 0, 320, 568],
+      "boxes": {
+        "tall": [0, 0, 320, 693]
+      },
+      "space": "screen",
+      "visibleIn": [
+        "practice",
+        "final-hit",
+        "complete"
+      ],
+      "passThrough": true,
+      "fill": "radial-gradient(ellipse at 6% 70%, #ffd4a0 0%, #f6833159 21%, transparent 47%), radial-gradient(ellipse at 100% 92%, #b0ffef86, transparent 50%)"
+    },
+    {
+      "id": "status-strip",
+      "box": [16, 8, 288, 62],
+      "visibleIn": [
+        "guided",
+        "practice",
+        "free",
+        "guided-hit",
+        "final-hit",
+        "complete"
+      ],
+      "qa": "bounds",
+      "radius": 11,
+      "fill": "#0d2532",
+      "children": [
+        {
+          "id": "relay-title",
+          "box": [12, 5, 146, 26],
+          "text": "RELAY 07",
+          "font": {
+            "size": 16,
+            "color": "#f2f8fa",
+            "weight": 800,
+            "tracking": 1.25,
+            "align": "left",
+            "single": true
+          }
+        },
+        {
+          "id": "relay-status",
+          "box": [12, 31, 164, 17],
+          "text": "STATION DEFENSE",
+          "font": {
+            "size": 10,
+            "color": "#c6dbe0",
+            "weight": 700,
+            "tracking": 1.05,
+            "align": "left",
+            "single": true
+          }
+        },
+        {
+          "id": "integrity",
+          "box": [188, 5, 88, 26],
+          "text": "100%",
+          "font": {
+            "size": 17,
+            "color": "#80fff1",
+            "weight": 800,
+            "align": "right",
+            "single": true
+          }
+        },
+        {
+          "id": "integrity-label",
+          "box": [188, 31, 88, 17],
+          "text": "INTEGRITY",
+          "font": {
+            "size": 10,
+            "color": "#c6dbe0",
+            "weight": 700,
+            "tracking": 1.05,
+            "align": "right",
+            "single": true
+          }
+        },
+        {
+          "id": "integrity-line",
+          "box": [221, 53, 55, 3],
+          "fill": "#80fff1",
+          "radius": 1.5
+        }
+      ]
+    },
+    {
+      "id": "incoming-rail",
+      "box": [16, 80, 148, 27],
+      "visibleIn": [
+        "guided",
+        "practice",
+        "free"
+      ],
+      "qa": "bounds",
+      "radius": 5,
+      "fill": "#201e20",
+      "children": [
+        {
+          "id": "incoming-diamond",
+          "box": [11, 10, 7, 7],
+          "fill": "#ffd093",
+          "mirror": false,
+          "origin": "center",
+          "radius": 1
+        },
+        {
+          "id": "incoming-label",
+          "box": [25, 0, 113, 27],
+          "text": "INCOMING SALVO",
+          "font": {
+            "size": 10,
+            "color": "#ffd093",
+            "weight": 800,
+            "tracking": 1.05,
+            "align": "left",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "shot-trail",
+      "box": [156, 158, 8, 73],
+      "boxes": {
+        "tall": [156, 189, 8, 84]
+      },
+      "visibleIn": [
+        "guided",
+        "practice",
+        "free"
+      ],
+      "passThrough": true,
+      "radius": 4,
+      "fill": "linear-gradient(transparent 6%, #ff8a4b90 70%, #fff2c8 98%)",
+      "shadow": "0 0 8px #ff7f43"
+    },
+    {
+      "id": "shot-core",
+      "box": [153, 224, 14, 14],
+      "boxes": {
+        "tall": [153, 266, 14, 14]
+      },
+      "visibleIn": [
+        "guided",
+        "practice",
+        "free"
+      ],
+      "passThrough": true,
+      "radius": 7,
+      "fill": "radial-gradient(circle, #fffde3 40%, #ffcd76 73%, #ff824b)",
+      "shadow": "0 0 10px #ff8c4e"
+    },
+    {
+      "id": "busy-shot-left",
+      "box": [101, 210, 8, 43],
+      "boxes": {
+        "tall": [101, 241, 8, 56]
+      },
+      "visibleIn": [
+        "practice"
+      ],
+      "passThrough": true,
+      "radius": 5,
+      "fill": "linear-gradient(transparent, #f88b4f 85%, #fff3c1)",
+      "shadow": "0 0 9px #fa9a54"
+    },
+    {
+      "id": "busy-shot-right",
+      "box": [210, 141, 8, 57],
+      "boxes": {
+        "tall": [210, 164, 8, 77]
+      },
+      "visibleIn": [
+        "practice"
+      ],
+      "passThrough": true,
+      "radius": 5,
+      "fill": "linear-gradient(transparent, #ffd583 85%, #fff3c1)",
+      "shadow": "0 0 8px #ffe0a5"
+    },
+    {
+      "id": "shield-ring",
+      "box": [105, 293, 110, 110],
+      "boxes": {
+        "tall": [96, 361, 128, 128]
+      },
+      "visibleIn": [
+        "guided-hit",
+        "final-hit"
+      ],
+      "passThrough": true,
+      "radius": 70,
+      "fill": "radial-gradient(circle, #95ffef26 56%, #f2fffd 63%, #56f5d8bf 65%, transparent 71%)",
+      "opacity": 0
+    },
+    {
+      "id": "guided-note",
+      "box": [16, 382, 288, 61],
+      "boxes": {
+        "tall": [16, 484, 288, 61]
+      },
+      "visibleIn": [
+        "guided"
+      ],
+      "qa": "bounds",
+      "fill": "#0d2532",
+      "radius": 10,
+      "children": [
+        {
+          "id": "guided-accent",
+          "box": [0, 10, 3, 41],
+          "fill": "#80fff1",
+          "radius": 1.5
+        },
+        {
+          "id": "guided-tip",
+          "box": [12, 7, 264, 20],
+          "text": "FIRST SHOT  /  1 OF 2",
+          "font": {
+            "size": 11,
+            "color": "#80fff1",
+            "weight": 800,
+            "tracking": 1.05,
+            "align": "left",
+            "single": true
+          },
+          "focusable": true
+        },
+        {
+          "id": "guided-instruction",
+          "box": [12, 28, 264, 24],
+          "text": "Tap Shield to deflect the shot.",
+          "font": {
+            "size": 15,
+            "color": "#f2f8fa",
+            "weight": 720,
+            "align": "left",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "hit-note",
+      "box": [16, 382, 288, 61],
+      "boxes": {
+        "tall": [16, 484, 288, 61]
+      },
+      "visibleIn": [
+        "guided-hit",
+        "final-hit",
+        "complete"
+      ],
+      "qa": "bounds",
+      "fill": "#0d2532",
+      "radius": 10,
+      "children": [
+        {
+          "id": "result-accent",
+          "box": [0, 10, 3, 41],
+          "fill": "#80fff1",
+          "radius": 1.5
+        },
+        {
+          "id": "final-status",
+          "box": [12, 5, 264, 29],
+          "text": "Shot deflected",
+          "font": {
+            "size": 19,
+            "color": "#f2f8fa",
+            "weight": 800,
+            "align": "left",
+            "single": true
+          },
+          "focusable": true
+        },
+        {
+          "id": "final-detail",
+          "box": [12, 33, 264, 19],
+          "text": "Relay protected · Integrity 100%",
+          "font": {
+            "size": 12,
+            "color": "#c6dbe0",
+            "weight": 710,
+            "align": "left",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "skip",
+      "box": [16, 458, 105, 52],
+      "boxes": {
+        "tall": [16, 559, 105, 52]
+      },
+      "visibleIn": [
+        "guided"
+      ],
+      "qa": "touch",
+      "radius": 10,
+      "action": "skip-drill",
+      "fill": "linear-gradient(168deg, #224954 0%, #15323d 63%)",
+      "text": "Skip",
+      "font": {
+        "size": 13,
+        "color": "#f2f8fa",
+        "minSize": 12,
+        "weight": 800
+      }
+    },
+    {
+      "id": "replay",
+      "box": [16, 458, 105, 52],
+      "boxes": {
+        "tall": [16, 559, 105, 52]
+      },
+      "visibleIn": [
+        "practice",
+        "free",
+        "complete"
+      ],
+      "qa": "touch",
+      "radius": 10,
+      "action": "replay-drill",
+      "fill": "linear-gradient(168deg, #224954 0%, #15323d 63%)",
+      "text": "Replay drill",
+      "font": {
+        "size": 13,
+        "color": "#f2f8fa",
+        "minSize": 12,
+        "weight": 800
+      }
+    },
+    {
+      "id": "shield-guided",
+      "box": [188, 456, 116, 56],
+      "boxes": {
+        "tall": [188, 557, 116, 56]
+      },
+      "visibleIn": [
+        "guided"
+      ],
+      "qa": "touch",
+      "radius": 10,
+      "action": "guided-shield",
+      "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+      "text": {
+        "key": "shield"
+      },
+      "font": {
+        "size": 17,
+        "color": "#082c2d",
+        "minSize": 15,
+        "weight": 800
+      }
+    },
+    {
+      "id": "shield-practice",
+      "box": [188, 456, 116, 56],
+      "boxes": {
+        "tall": [188, 557, 116, 56]
+      },
+      "visibleIn": [
+        "practice",
+        "free"
+      ],
+      "qa": "touch",
+      "radius": 10,
+      "action": "practice-shield",
+      "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+      "text": {
+        "key": "shield"
+      },
+      "font": {
+        "size": 17,
+        "color": "#082c2d",
+        "minSize": 15,
+        "weight": 800
+      }
+    },
+    {
+      "id": "reward-scrim",
+      "box": [0, 0, 320, 568],
+      "boxes": {
+        "tall": [0, 0, 320, 693]
+      },
+      "space": "screen",
+      "visibleIn": [
+        "offer-committed",
+        "offer-uncommitted",
+        "sending",
+        "lost-committed",
+        "lost-uncommitted",
+        "checking",
+        "received"
+      ],
+      "fill": "#060e17b8"
+    },
+    {
+      "id": "reward-card",
+      "box": [16, 142, 288, 246],
+      "boxes": {
+        "tall": [16, 199, 288, 246]
+      },
+      "visibleIn": [
+        "offer-committed",
+        "offer-uncommitted",
+        "sending",
+        "lost-committed",
+        "lost-uncommitted",
+        "checking",
+        "received"
+      ],
+      "qa": "bounds",
+      "modal": true,
+      "label": "Drill reward",
+      "fill": "#0d2532",
+      "radius": 16,
+      "children": [
+        {
+          "id": "reward-kicker",
+          "box": [16, 15, 256, 23],
+          "text": "MISSION SUPPLY",
+          "font": {
+            "size": 11,
+            "color": "#80fff1",
+            "weight": 800,
+            "tracking": 1.6,
+            "align": "left",
+            "single": true
+          }
+        },
+        {
+          "id": "reward-title",
+          "box": [16, 43, 256, 45],
+          "text": { "key": "reward", "prefix": "+", "suffix": " Alloy" },
+          "font": {
+            "size": 30,
+            "color": "#f2f8fa",
+            "weight": 800,
+            "align": "left",
+            "single": true
+          }
+        },
+        {
+          "id": "reward-before",
+          "box": [16, 99, 256, 48],
+          "text": { "key": "initialBalance", "prefix": "Balance: ", "suffix": " Alloy" },
+          "font": {
+            "size": 16,
+            "color": "#c6dbe0",
+            "align": "left"
+          },
+          "visibleIn": [
+            "offer-committed",
+            "offer-uncommitted"
+          ]
+        },
+        {
+          "id": "reward-sending",
+          "box": [16, 99, 256, 48],
+          "text": "Requesting reward…",
+          "font": {
+            "size": 16,
+            "color": "#c6dbe0",
+            "align": "left"
+          },
+          "visibleIn": [
+            "sending"
+          ]
+        },
+        {
+          "id": "reward-offline",
+          "box": [16, 98, 256, 57],
+          "text": "Connection lost.\nCheck your reward when back online.",
+          "font": {
+            "size": 15,
+            "color": "#ffd093",
+            "align": "left",
+            "weight": 720
+          },
+          "visibleIn": [
+            "lost-committed",
+            "lost-uncommitted"
+          ]
+        },
+        {
+          "id": "reward-checking",
+          "box": [16, 99, 256, 48],
+          "text": "Checking the original request…",
+          "font": {
+            "size": 16,
+            "color": "#c6dbe0",
+            "align": "left"
+          },
+          "visibleIn": [
+            "checking"
+          ]
+        },
+        {
+          "id": "reward-confirmed",
+          "box": [16, 98, 256, 57],
+          "text": { "key": "confirmedBalance", "prefix": "Reward received.\nBalance: ", "suffix": " Alloy" },
+          "font": {
+            "size": 17,
+            "color": "#80fff1",
+            "align": "left",
+            "weight": 800
+          },
+          "visibleIn": [
+            "received"
+          ],
+          "focusable": true
+        },
+        {
+          "id": "claim-commit",
+          "box": [16, 181, 256, 48],
+          "visibleIn": [
+            "offer-committed"
+          ],
+          "qa": "touch",
+          "radius": 10,
+          "action": "request-committed",
+          "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+          "text": "Claim reward",
+          "font": {
+            "size": 17,
+            "color": "#082c2d",
+            "minSize": 15,
+            "weight": 800,
+            "tracking": 0.2
+          }
+        },
+        {
+          "id": "claim-uncommitted",
+          "box": [16, 181, 256, 48],
+          "visibleIn": [
+            "offer-uncommitted"
+          ],
+          "qa": "touch",
+          "radius": 10,
+          "action": "request-uncommitted",
+          "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+          "text": "Claim reward",
+          "font": {
+            "size": 17,
+            "color": "#082c2d",
+            "minSize": 15,
+            "weight": 800,
+            "tracking": 0.2
+          }
+        },
+        {
+          "id": "retry-after-commit",
+          "box": [16, 181, 256, 48],
+          "visibleIn": [
+            "lost-committed"
+          ],
+          "qa": "touch",
+          "radius": 10,
+          "action": "retry-committed",
+          "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+          "text": "Retry",
+          "font": {
+            "size": 17,
+            "color": "#082c2d",
+            "minSize": 15,
+            "weight": 800,
+            "tracking": 0.2
+          }
+        },
+        {
+          "id": "retry-before-commit",
+          "box": [16, 181, 256, 48],
+          "visibleIn": [
+            "lost-uncommitted"
+          ],
+          "qa": "touch",
+          "radius": 10,
+          "action": "retry-uncommitted",
+          "fill": "linear-gradient(168deg, #defdf7 0%, #a8fbeb 63%)",
+          "text": "Retry",
+          "font": {
+            "size": 17,
+            "color": "#082c2d",
+            "minSize": 15,
+            "weight": 800,
+            "tracking": 0.2
+          }
+        }
+      ]
+    }
+  ],
+  "motion": {
+    "learn-deflect": {
+      "label": "Guided shot deflects",
+      "trigger": "guided-shield",
+      "duration": 480,
+      "reduced": "finish",
+      "phases": [
+        {
+          "at": 0,
+          "state": "guided-hit"
+        },
+        {
+          "at": 480,
+          "state": "practice"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "deflect-shot"
+        }
+      ],
+      "tracks": [
+        {
+          "node": "shield-ring",
+          "property": "opacity",
+          "keys": [
+            [0, 0.8],
+            [120, 0.5, "outCubic"],
+            [360, 0, "outCubic"]
+          ]
+        },
+        {
+          "node": "shield-ring",
+          "property": "scaleX",
+          "keys": [
+            [0, 0.8],
+            [360, 1.12, "outCubic"]
+          ]
+        },
+        {
+          "node": "shield-ring",
+          "property": "scaleY",
+          "keys": [
+            [0, 0.8],
+            [360, 1.12, "outCubic"]
+          ]
+        }
+      ],
+      "focus": "shield-practice"
+    },
+    "confirm-deflect": {
+      "label": "Independent shot deflects",
+      "trigger": "practice-shield",
+      "duration": 480,
+      "reduced": "finish",
+      "phases": [
+        {
+          "at": 0,
+          "state": "final-hit"
+        },
+        {
+          "at": 480,
+          "state": "complete"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "deflect-shot"
+        }
+      ],
+      "tracks": [
+        {
+          "node": "shield-ring",
+          "property": "opacity",
+          "keys": [
+            [0, 0.8],
+            [120, 0.5, "outCubic"],
+            [360, 0, "outCubic"]
+          ]
+        },
+        {
+          "node": "shield-ring",
+          "property": "scaleX",
+          "keys": [
+            [0, 0.8],
+            [360, 1.12, "outCubic"]
+          ]
+        },
+        {
+          "node": "shield-ring",
+          "property": "scaleY",
+          "keys": [
+            [0, 0.8],
+            [360, 1.12, "outCubic"]
+          ]
+        }
+      ],
+      "focus": "final-status"
+    },
+    "skip-lesson": {
+      "label": "Skip drill",
+      "trigger": "skip-drill",
+      "duration": 160,
+      "reduced": "finish",
+      "phases": [
+        {
+          "at": 0,
+          "state": "free"
+        },
+        {
+          "at": 160,
+          "state": "free"
+        }
+      ],
+      "tracks": [],
+      "focus": "shield-practice"
+    },
+    "replay-lesson": {
+      "label": "Replay drill",
+      "trigger": "replay-drill",
+      "duration": 160,
+      "reduced": "finish",
+      "phases": [
+        {
+          "at": 0,
+          "state": "guided"
+        },
+        {
+          "at": 160,
+          "state": "guided"
+        }
+      ],
+      "tracks": [],
+      "focus": "guided-tip"
+    },
+    "lose-after-commit": {
+      "label": "Response lost after the grant",
+      "trigger": "request-committed",
+      "duration": 620,
+      "reduced": "play",
+      "phases": [
+        {
+          "at": 0,
+          "state": "sending"
+        },
+        {
+          "at": 620,
+          "state": "lost-committed"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "request-reward"
+        },
+        {
+          "at": 260,
+          "action": "grant-reward"
+        }
+      ],
+      "tracks": [],
+      "focus": "retry-after-commit"
+    },
+    "lose-before-commit": {
+      "label": "Connection lost before the grant",
+      "trigger": "request-uncommitted",
+      "duration": 620,
+      "reduced": "play",
+      "phases": [
+        {
+          "at": 0,
+          "state": "sending"
+        },
+        {
+          "at": 620,
+          "state": "lost-uncommitted"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "request-reward"
+        }
+      ],
+      "tracks": [],
+      "focus": "retry-before-commit"
+    },
+    "recover-committed": {
+      "label": "Recover the existing grant",
+      "trigger": "retry-committed",
+      "duration": 650,
+      "reduced": "play",
+      "phases": [
+        {
+          "at": 0,
+          "state": "checking"
+        },
+        {
+          "at": 650,
+          "state": "received"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "check-status"
+        }
+      ],
+      "tracks": [],
+      "focus": "reward-confirmed"
+    },
+    "recover-uncommitted": {
+      "label": "Retry the original claim",
+      "trigger": "retry-uncommitted",
+      "duration": 650,
+      "reduced": "play",
+      "phases": [
+        {
+          "at": 0,
+          "state": "checking"
+        },
+        {
+          "at": 650,
+          "state": "received"
+        }
+      ],
+      "events": [
+        {
+          "at": 0,
+          "action": "check-status"
+        },
+        {
+          "at": 260,
+          "action": "retry-reward"
+        },
+        {
+          "at": 480,
+          "action": "grant-reward"
+        }
+      ],
+      "tracks": [],
+      "focus": "reward-confirmed"
+    }
+  },
+  "motionDefaults": {
+    "enter": {
+      "ms": 160,
+      "y": 8
+    },
+    "exit": {
+      "ms": 120,
+      "y": -6
+    }
+  },
+  "loops": {
+    "incoming-shot": {
+      "label": "Incoming shot travels down the relay lane",
+      "states": [
+        "guided",
+        "practice",
+        "free"
+      ],
+      "period": 1650,
+      "tracks": [
+        {
+          "node": "shot-core",
+          "property": "y",
+          "keys": [
+            [0, -25],
+            [1300, 93],
+            [1650, 93]
+          ]
+        },
+        {
+          "node": "shot-trail",
+          "property": "y",
+          "keys": [
+            [0, -25],
+            [1300, 93],
+            [1650, 93]
+          ]
+        },
+        {
+          "node": "shot-core",
+          "property": "opacity",
+          "keys": [
+            [0, 0],
+            [130, 1],
+            [1300, 1],
+            [1510, 0],
+            [1650, 0]
+          ]
+        },
+        {
+          "node": "shot-trail",
+          "property": "opacity",
+          "keys": [
+            [0, 0],
+            [130, 1],
+            [1300, 1],
+            [1510, 0],
+            [1650, 0]
+          ]
+        }
+      ]
+    }
+  },
+  "previewDemos": {
+    "practice": {
+      "label": "HUD · independent shot",
+      "state": "practice"
+    },
+    "lost-after-commit": {
+      "label": "Reward · response lost after grant",
+      "state": "offer-committed"
+    },
+    "lost-before-commit": {
+      "label": "Reward · connection lost before grant",
+      "state": "offer-uncommitted"
+    }
+  }
+}

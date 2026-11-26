@@ -5,7 +5,7 @@ import { validateExample } from './validate.mjs';
 
 const repo = fileURLToPath(new URL('..', import.meta.url));
 const ui = resolve(repo, 'preview');
-const examples = ['catsurvivor', 'orbital-works'];
+export const examples = ['catsurvivor', 'orbital-works', 'shield-drill'];
 const types = { '.png': 'image/png', '.ttf': 'font/ttf' };
 const json = async (path) => JSON.parse(await readFile(path, 'utf8'));
 
