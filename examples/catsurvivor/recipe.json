@@ -1,0 +1,3982 @@
+{
+  "id": "journey-rewards",
+  "title": "Journey · Chapter rewards",
+  "pack": {
+    "id": "dusk-outpost",
+    "version": "1.0.0"
+  },
+  "reference": {
+    "role": "approved-target",
+    "path": "docs/ui-concepts/F_home.png",
+    "behavior": [
+      "Assets/LastSurvival/MetaComposition/MetaViewJourney.cs",
+      "Assets/LastSurvival/MetaComposition/MetaViewRewards.cs"
+    ]
+  },
+  "design": {
+    "width": 800,
+    "profiles": {
+      "tall": {
+        "viewport": [
+          1170,
+          2532
+        ],
+        "safeInsets": [
+          63,
+          17,
+          46,
+          17
+        ]
+      },
+      "compact": {
+        "viewport": [
+          1080,
+          1920
+        ],
+        "safeInsets": [
+          40,
+          16,
+          32,
+          16
+        ]
+      }
+    }
+  },
+  "theme": {
+    "text": "#fff1d0"
+  },
+  "data": {
+    "player": "Ranger",
+    "level": 12,
+    "power": "2,480",
+    "energy": "30/30",
+    "coin": "12.4K",
+    "gem": "250",
+    "chapter": "Chapter 3 ·\nAutumn Woods",
+    "supplyTimer": "02:15",
+    "battleCost": 5,
+    "chat": "Chat · Ready for patrol?",
+    "rewardMessage": "Rewards for completing chapter objectives.",
+    "rewardCoin": "1,200",
+    "rewardGem": "30",
+    "rewardEnergy": "5"
+  },
+  "fixtures": {
+    "stress": {
+      "chapter": "Chapter 3 · Old Watchtower Approach",
+      "coin": "999.99M",
+      "rewardCoin": "9,999,999",
+      "rewardMessage": "Chapter objectives completed. All eligible rewards have been added to your inventory."
+    }
+  },
+  "actions": {
+    "open": {
+      "type": "input",
+      "from": [
+        "journey"
+      ],
+      "contract": "Activate the currently available chapter reward. Journey data provides claim availability."
+    },
+    "skip": {
+      "type": "input",
+      "skip": true,
+      "contract": "Jump to opening after the 120 ms tap debounce."
+    },
+    "dismiss": {
+      "type": "input",
+      "from": [
+        "summary"
+      ],
+      "contract": "Dismiss the authoritative grant."
+    },
+    "claim-chapter-tasks": {
+      "type": "event",
+      "setsClaimed": true,
+      "contract": "Submit one idempotent chapter claim and display the returned LastGrant."
+    },
+    "dismiss-last-grant": {
+      "type": "event",
+      "contract": "Dismiss LastGrant and restore Journey input."
+    }
+  },
+  "states": {
+    "journey": {
+      "label": "Journey · Reward ready"
+    },
+    "chest-flight": {
+      "label": "Chest · Flight and anticipation"
+    },
+    "chest-opening": {
+      "label": "Chest · Opening"
+    },
+    "summary": {
+      "label": "Rewards · Summary",
+      "escape": "dismiss"
+    },
+    "closing": {
+      "label": "Rewards · Dismissing"
+    },
+    "claimed": {
+      "label": "Journey · Reward collected",
+      "claimed": true
+    }
+  },
+  "initialState": "journey",
+  "nodes": [
+    {
+      "id": "forest",
+      "box": [
+        0,
+        0,
+        800,
+        1731
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          0,
+          800,
+          1423
+        ]
+      },
+      "space": "screen",
+      "asset": "home-bg"
+    },
+    {
+      "id": "ambience",
+      "box": [
+        0,
+        0,
+        800,
+        1731
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          0,
+          800,
+          1423
+        ]
+      },
+      "space": "screen",
+      "fill": "linear-gradient(180deg,#111a3333 0%,transparent 32%,#101b3388 100%)"
+    },
+    {
+      "id": "profile-frame",
+      "box": [
+        0,
+        0,
+        113,
+        116
+      ],
+      "asset": "panel",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "avatar",
+          "box": [
+            5,
+            5,
+            103,
+            103
+          ],
+          "asset": "avatar",
+          "clip": true,
+          "radius": 22
+        }
+      ]
+    },
+    {
+      "id": "player-name",
+      "box": [
+        121,
+        7,
+        199,
+        31
+      ],
+      "text": {
+        "key": "player"
+      },
+      "font": {
+        "size": 29,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426",
+        "align": "left",
+        "single": true
+      }
+    },
+    {
+      "id": "xp-track",
+      "box": [
+        198,
+        48,
+        100,
+        17
+      ],
+      "asset": "bar-bg",
+      "children": [
+        {
+          "id": "xp-fill",
+          "box": [
+            1,
+            2,
+            58,
+            12
+          ],
+          "asset": "bar-fill"
+        }
+      ]
+    },
+    {
+      "id": "level",
+      "box": [
+        123,
+        42,
+        73,
+        28
+      ],
+      "text": {
+        "key": "level",
+        "prefix": "Lv. "
+      },
+      "font": {
+        "size": 22,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426",
+        "align": "left",
+        "single": true
+      }
+    },
+    {
+      "id": "power-icon",
+      "box": [
+        122,
+        77,
+        38,
+        33
+      ],
+      "asset": "power"
+    },
+    {
+      "id": "power",
+      "box": [
+        164,
+        77,
+        150,
+        34
+      ],
+      "text": {
+        "key": "power",
+        "prefix": "Power "
+      },
+      "font": {
+        "size": 22,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426",
+        "align": "left",
+        "single": true
+      }
+    },
+    {
+      "id": "resource-energy",
+      "box": [
+        332,
+        1,
+        138,
+        42
+      ],
+      "asset": "capsule",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "icon-energy",
+          "box": [
+            6,
+            3,
+            38,
+            36
+          ],
+          "asset": "energy"
+        },
+        {
+          "id": "value-energy",
+          "box": [
+            43,
+            2,
+            71,
+            36
+          ],
+          "text": {
+            "key": "energy"
+          },
+          "font": {
+            "size": 21,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        },
+        {
+          "id": "plus-energy",
+          "box": [
+            113,
+            4,
+            20,
+            32
+          ],
+          "text": "+",
+          "font": {
+            "size": 24,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "resource-coin",
+      "box": [
+        477,
+        1,
+        138,
+        42
+      ],
+      "asset": "capsule",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "icon-coin",
+          "box": [
+            6,
+            3,
+            38,
+            36
+          ],
+          "asset": "coin"
+        },
+        {
+          "id": "value-coin",
+          "box": [
+            43,
+            2,
+            71,
+            36
+          ],
+          "text": {
+            "key": "coin"
+          },
+          "font": {
+            "size": 21,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true,
+            "minSize": 15
+          }
+        },
+        {
+          "id": "plus-coin",
+          "box": [
+            113,
+            4,
+            20,
+            32
+          ],
+          "text": "+",
+          "font": {
+            "size": 24,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "resource-gem",
+      "box": [
+        622,
+        1,
+        138,
+        42
+      ],
+      "asset": "capsule",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "icon-gem",
+          "box": [
+            6,
+            3,
+            38,
+            36
+          ],
+          "asset": "gem"
+        },
+        {
+          "id": "value-gem",
+          "box": [
+            43,
+            2,
+            71,
+            36
+          ],
+          "text": {
+            "key": "gem"
+          },
+          "font": {
+            "size": 21,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        },
+        {
+          "id": "plus-gem",
+          "box": [
+            113,
+            4,
+            20,
+            32
+          ],
+          "text": "+",
+          "font": {
+            "size": 24,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-news",
+      "box": [
+        331,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-news-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "news"
+        },
+        {
+          "id": "shortcut-news-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "News",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-bag",
+      "box": [
+        405,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-bag-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "bag"
+        },
+        {
+          "id": "shortcut-bag-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "Bag",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-events",
+      "box": [
+        479,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-events-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "events"
+        },
+        {
+          "id": "shortcut-events-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "Events",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-mail",
+      "box": [
+        553,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-mail-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "mail"
+        },
+        {
+          "id": "shortcut-mail-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "Mail",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-social",
+      "box": [
+        627,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-social-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "social"
+        },
+        {
+          "id": "shortcut-social-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "Social",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shortcut-menu",
+      "box": [
+        701,
+        53,
+        69,
+        70
+      ],
+      "asset": "tab",
+      "children": [
+        {
+          "id": "shortcut-menu-icon",
+          "box": [
+            12.8,
+            5,
+            43.4,
+            43.4
+          ],
+          "asset": "menu"
+        },
+        {
+          "id": "shortcut-menu-copy",
+          "box": [
+            2,
+            37,
+            65,
+            27
+          ],
+          "text": "Menu",
+          "font": {
+            "size": 16,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chapter",
+      "box": [
+        193,
+        136,
+        390,
+        105
+      ],
+      "boxes": {
+        "compact": [
+          187,
+          121,
+          402,
+          105
+        ]
+      },
+      "text": {
+        "key": "chapter"
+      },
+      "font": {
+        "size": 42,
+        "stroke": "3.8px #101426",
+        "shadow": "0 5px 1px #101426",
+        "minSize": 30
+      },
+      "qa": "safe"
+    },
+    {
+      "id": "supply",
+      "box": [
+        0,
+        146,
+        181,
+        97
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          137,
+          175,
+          86
+        ]
+      },
+      "asset": "panel-highlight",
+      "children": [
+        {
+          "id": "supply-icon",
+          "box": [
+            10,
+            3,
+            76,
+            88
+          ],
+          "asset": "supply-drop"
+        },
+        {
+          "id": "supply-copy",
+          "box": [
+            79,
+            7,
+            97,
+            83
+          ],
+          "text": "Supply\nDrop",
+          "font": {
+            "size": 22,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "supply-badge",
+          "box": [
+            159,
+            -5,
+            23,
+            23
+          ],
+          "asset": "badge"
+        }
+      ]
+    },
+    {
+      "id": "outpost",
+      "box": [
+        595,
+        146,
+        181,
+        97
+      ],
+      "boxes": {
+        "compact": [
+          601,
+          137,
+          175,
+          86
+        ]
+      },
+      "asset": "panel-highlight",
+      "children": [
+        {
+          "id": "outpost-icon",
+          "box": [
+            10,
+            3,
+            76,
+            88
+          ],
+          "asset": "outpost-pass"
+        },
+        {
+          "id": "outpost-copy",
+          "box": [
+            79,
+            7,
+            97,
+            83
+          ],
+          "text": "Outpost\nPass",
+          "font": {
+            "size": 22,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "outpost-badge",
+          "box": [
+            159,
+            -5,
+            23,
+            23
+          ],
+          "asset": "badge"
+        }
+      ]
+    },
+    {
+      "id": "supply-timer",
+      "box": [
+        105,
+        236,
+        102,
+        46
+      ],
+      "boxes": {
+        "compact": [
+          92,
+          218,
+          103,
+          42
+        ]
+      },
+      "asset": "plate",
+      "text": {
+        "key": "supplyTimer",
+        "prefix": "Reward\n"
+      },
+      "font": {
+        "size": 17,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426"
+      }
+    },
+    {
+      "id": "left",
+      "box": [
+        0,
+        296,
+        127,
+        474
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          265,
+          127,
+          387
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "left-pack",
+          "box": [
+            11,
+            16,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "left-pack-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "pack",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "left-pack-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Pack",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            },
+            {
+              "id": "left-pack-badge",
+              "box": [
+                80,
+                2,
+                22,
+                22
+              ],
+              "asset": "badge"
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              13,
+              104,
+              112
+            ]
+          }
+        },
+        {
+          "id": "left-bonus",
+          "box": [
+            11,
+            167,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "left-bonus-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "bonus",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "left-bonus-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Bonus",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              135,
+              104,
+              112
+            ]
+          }
+        },
+        {
+          "id": "left-event",
+          "box": [
+            11,
+            318,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "left-event-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "event",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "left-event-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Event",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              257,
+              104,
+              112
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "right",
+      "box": [
+        649,
+        296,
+        127,
+        474
+      ],
+      "boxes": {
+        "compact": [
+          649,
+          265,
+          127,
+          387
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "right-quests",
+          "box": [
+            11,
+            16,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "right-quests-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "quests",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "right-quests-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Quests",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              13,
+              104,
+              112
+            ]
+          }
+        },
+        {
+          "id": "right-progress",
+          "box": [
+            11,
+            167,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "right-progress-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "progress",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "right-progress-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Progress",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              135,
+              104,
+              112
+            ]
+          }
+        },
+        {
+          "id": "right-ranking",
+          "box": [
+            11,
+            318,
+            104,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "right-ranking-icon",
+              "box": [
+                11.079999999999998,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "ranking",
+              "boxes": {
+                "compact": [
+                  18,
+                  5,
+                  68,
+                  68
+                ]
+              }
+            },
+            {
+              "id": "right-ranking-copy",
+              "box": [
+                2,
+                99,
+                100,
+                27
+              ],
+              "text": "Ranking",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  77,
+                  100,
+                  27
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              11,
+              257,
+              104,
+              112
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "arena-frame",
+      "box": [
+        141,
+        301,
+        494,
+        483
+      ],
+      "boxes": {
+        "compact": [
+          139,
+          265,
+          498,
+          393
+        ]
+      },
+      "asset": "panel-highlight",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "arena-art",
+          "box": [
+            9,
+            9,
+            476,
+            466
+          ],
+          "boxes": {
+            "compact": [
+              9,
+              9,
+              480,
+              375
+            ]
+          },
+          "asset": "arena",
+          "clip": true,
+          "radius": 29
+        },
+        {
+          "id": "difficulty-normal",
+          "box": [
+            104,
+            386,
+            144,
+            53
+          ],
+          "asset": "primary",
+          "boxes": {
+            "compact": [
+              106,
+              307,
+              142,
+              46
+            ]
+          },
+          "text": "Normal",
+          "font": {
+            "size": 27,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "difficulty-hard",
+          "box": [
+            254,
+            386,
+            137,
+            53
+          ],
+          "asset": "secondary",
+          "boxes": {
+            "compact": [
+              254,
+              307,
+              142,
+              46
+            ]
+          },
+          "text": "Hard",
+          "font": {
+            "size": 27,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "arena-title",
+          "box": [
+            122,
+            449,
+            250,
+            61
+          ],
+          "asset": "plate",
+          "boxes": {
+            "compact": [
+              124,
+              356,
+              250,
+              56
+            ]
+          },
+          "text": "Enemies",
+          "font": {
+            "size": 30,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bonus-feature",
+      "box": [
+        130,
+        833,
+        142,
+        137
+      ],
+      "boxes": {
+        "compact": [
+          130,
+          700,
+          142,
+          122
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "bonus-feature-icon",
+          "box": [
+            15,
+            9,
+            112,
+            90
+          ],
+          "asset": "supply-drop"
+        },
+        {
+          "id": "bonus-feature-label",
+          "box": [
+            6,
+            97,
+            130,
+            33
+          ],
+          "text": "Bonus",
+          "font": {
+            "size": 26,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "patrol-feature",
+      "box": [
+        310,
+        850,
+        210,
+        123
+      ],
+      "boxes": {
+        "compact": [
+          310,
+          703,
+          210,
+          116
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "patrol-feature-art",
+          "box": [
+            5,
+            -19,
+            200,
+            116
+          ],
+          "asset": "patrol-art"
+        },
+        {
+          "id": "patrol-feature-label",
+          "box": [
+            10,
+            79,
+            190,
+            39
+          ],
+          "asset": "plate",
+          "text": "Patrol",
+          "font": {
+            "size": 26,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "patrol-feature-badge",
+          "box": [
+            179,
+            -7,
+            23,
+            23
+          ],
+          "asset": "badge"
+        }
+      ]
+    },
+    {
+      "id": "reward-track",
+      "box": [
+        105,
+        1009,
+        566,
+        74
+      ],
+      "boxes": {
+        "compact": [
+          105,
+          839,
+          566,
+          69
+        ]
+      },
+      "asset": "plate",
+      "children": [
+        {
+          "id": "track-cleared",
+          "box": [
+            11,
+            11,
+            153,
+            49
+          ],
+          "asset": "capsule",
+          "children": [
+            {
+              "id": "track-check",
+              "box": [
+                7,
+                4,
+                40,
+                40
+              ],
+              "asset": "check"
+            },
+            {
+              "id": "track-cleared-copy",
+              "box": [
+                47,
+                3,
+                100,
+                41
+              ],
+              "text": "Claimed",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              }
+            }
+          ]
+        },
+        {
+          "id": "track-gap-a",
+          "box": [
+            162,
+            13,
+            38,
+            45
+          ],
+          "text": "···",
+          "font": {
+            "size": 30,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        },
+        {
+          "id": "reward-trigger",
+          "box": [
+            194,
+            9,
+            185,
+            55
+          ],
+          "asset": "tab",
+          "action": "open",
+          "press": 0.95,
+          "label": "Claim chapter reward",
+          "visibleIn": [
+            "journey",
+            "claimed"
+          ],
+          "disableWhenClaimed": true,
+          "qa": "touch",
+          "children": [
+            {
+              "id": "reward-trigger-icon",
+              "box": [
+                8,
+                2,
+                48,
+                49
+              ],
+              "asset": "gift-ready",
+              "claimedAsset": "check"
+            },
+            {
+              "id": "reward-trigger-copy",
+              "box": [
+                58,
+                4,
+                122,
+                44
+              ],
+              "text": "Claim Reward",
+              "claimedText": "Claimed",
+              "font": {
+                "size": 19,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "single": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "trigger-flight-base",
+          "box": [
+            194,
+            9,
+            185,
+            55
+          ],
+          "asset": "tab",
+          "visibleIn": [
+            "chest-flight",
+            "chest-opening",
+            "summary",
+            "closing"
+          ]
+        },
+        {
+          "id": "track-gap-b",
+          "box": [
+            380,
+            13,
+            38,
+            45
+          ],
+          "text": "···",
+          "font": {
+            "size": 30,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "single": true
+          }
+        },
+        {
+          "id": "reward-later",
+          "box": [
+            420,
+            11,
+            136,
+            49
+          ],
+          "asset": "capsule",
+          "children": [
+            {
+              "id": "reward-later-icon",
+              "box": [
+                6,
+                3,
+                43,
+                42
+              ],
+              "asset": "gift-closed"
+            },
+            {
+              "id": "reward-later-copy",
+              "box": [
+                50,
+                3,
+                81,
+                40
+              ],
+              "text": "Reward",
+              "font": {
+                "size": 20,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              }
+            }
+          ],
+          "focusable": true
+        }
+      ]
+    },
+    {
+      "id": "collection-feature",
+      "box": [
+        9,
+        1121,
+        133,
+        123
+      ],
+      "boxes": {
+        "compact": [
+          9,
+          940,
+          133,
+          113
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "collection-feature-icon",
+          "box": [
+            32,
+            6,
+            69,
+            64
+          ],
+          "asset": "collection"
+        },
+        {
+          "id": "collection-feature-label",
+          "box": [
+            2,
+            68,
+            129,
+            49
+          ],
+          "text": "Collection\n8/20",
+          "font": {
+            "size": 22,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "left-battle",
+      "box": [
+        158,
+        1150,
+        70,
+        71
+      ],
+      "boxes": {
+        "compact": [
+          158,
+          962,
+          70,
+          63
+        ]
+      },
+      "asset": "tab",
+      "children": [
+        {
+          "id": "prev-icon",
+          "box": [
+            17,
+            10,
+            36,
+            49
+          ],
+          "asset": "arrow-left"
+        }
+      ]
+    },
+    {
+      "id": "battle",
+      "box": [
+        239,
+        1124,
+        298,
+        121
+      ],
+      "boxes": {
+        "compact": [
+          239,
+          937,
+          298,
+          110
+        ]
+      },
+      "asset": "primary",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "battle-title",
+          "box": [
+            5,
+            6,
+            288,
+            56
+          ],
+          "text": "BATTLE",
+          "font": {
+            "size": 46,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "battle-cost-icon",
+          "box": [
+            102,
+            64,
+            35,
+            36
+          ],
+          "asset": "energy"
+        },
+        {
+          "id": "battle-cost",
+          "box": [
+            143,
+            64,
+            55,
+            38
+          ],
+          "text": {
+            "key": "battleCost"
+          },
+          "font": {
+            "size": 34,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "align": "left"
+          }
+        }
+      ]
+    },
+    {
+      "id": "right-battle",
+      "box": [
+        548,
+        1150,
+        70,
+        71
+      ],
+      "boxes": {
+        "compact": [
+          548,
+          962,
+          70,
+          63
+        ]
+      },
+      "asset": "tab",
+      "children": [
+        {
+          "id": "next-icon",
+          "box": [
+            17,
+            10,
+            36,
+            49
+          ],
+          "asset": "arrow-right"
+        }
+      ]
+    },
+    {
+      "id": "event-tile",
+      "box": [
+        641,
+        1110,
+        135,
+        96
+      ],
+      "boxes": {
+        "compact": [
+          641,
+          918,
+          135,
+          84
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "event-tile-icon",
+          "box": [
+            7,
+            10,
+            52,
+            51
+          ],
+          "asset": "event"
+        },
+        {
+          "id": "event-tile-copy",
+          "box": [
+            58,
+            13,
+            71,
+            52
+          ],
+          "text": "Event",
+          "font": {
+            "size": 20,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "event-tile-badge",
+          "box": [
+            109,
+            0,
+            22,
+            22
+          ],
+          "asset": "badge"
+        }
+      ]
+    },
+    {
+      "id": "challenge-tile",
+      "box": [
+        641,
+        1213,
+        135,
+        96
+      ],
+      "boxes": {
+        "compact": [
+          641,
+          1009,
+          135,
+          84
+        ]
+      },
+      "asset": "panel",
+      "children": [
+        {
+          "id": "challenge-tile-icon",
+          "box": [
+            7,
+            11,
+            52,
+            51
+          ],
+          "asset": "challenge"
+        },
+        {
+          "id": "challenge-tile-copy",
+          "box": [
+            54,
+            14,
+            78,
+            52
+          ],
+          "text": "Challenge",
+          "font": {
+            "size": 18,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "challenge-tile-badge",
+          "box": [
+            109,
+            0,
+            22,
+            22
+          ],
+          "asset": "badge"
+        }
+      ]
+    },
+    {
+      "id": "message-bubble",
+      "box": [
+        474,
+        1311,
+        135,
+        71
+      ],
+      "boxes": {
+        "compact": [
+          474,
+          1096,
+          135,
+          63
+        ]
+      },
+      "asset": "plate",
+      "text": "Messages\n···",
+      "font": {
+        "size": 20,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426"
+      }
+    },
+    {
+      "id": "chat",
+      "box": [
+        0,
+        1388,
+        619,
+        59
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          1167,
+          619,
+          53
+        ]
+      },
+      "asset": "plate",
+      "children": [
+        {
+          "id": "chat-icon",
+          "box": [
+            18,
+            7,
+            43,
+            42
+          ],
+          "asset": "messages"
+        },
+        {
+          "id": "chat-copy",
+          "box": [
+            66,
+            6,
+            542,
+            47
+          ],
+          "text": {
+            "key": "chat"
+          },
+          "font": {
+            "size": 24,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "align": "left",
+            "single": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "box": [
+        631,
+        1388,
+        145,
+        59
+      ],
+      "boxes": {
+        "compact": [
+          631,
+          1167,
+          145,
+          53
+        ]
+      },
+      "asset": "plate",
+      "children": [
+        {
+          "id": "help-icon",
+          "box": [
+            14,
+            8,
+            38,
+            39
+          ],
+          "asset": "help"
+        },
+        {
+          "id": "help-copy",
+          "box": [
+            55,
+            8,
+            83,
+            39
+          ],
+          "text": "Help",
+          "font": {
+            "size": 25,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "box": [
+        0,
+        1475,
+        776,
+        142
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          1242,
+          776,
+          111
+        ]
+      },
+      "asset": "panel",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "nav-tile-shop",
+          "box": [
+            3,
+            5,
+            126,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "nav-tile-shop-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-shop",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-shop-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Shop",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-shop-badge",
+              "box": [
+                102,
+                2,
+                22,
+                22
+              ],
+              "asset": "badge"
+            }
+          ],
+          "boxes": {
+            "compact": [
+              3,
+              4,
+              126,
+              103
+            ]
+          }
+        },
+        {
+          "id": "nav-tile-heroes",
+          "box": [
+            132,
+            5,
+            126,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "nav-tile-heroes-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-heroes",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-heroes-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Heroes",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-heroes-badge",
+              "box": [
+                102,
+                2,
+                22,
+                22
+              ],
+              "asset": "badge"
+            }
+          ],
+          "boxes": {
+            "compact": [
+              132,
+              4,
+              126,
+              103
+            ]
+          }
+        },
+        {
+          "id": "nav-tile-chapters",
+          "box": [
+            261,
+            -11,
+            126,
+            132
+          ],
+          "asset": "tab-active",
+          "children": [
+            {
+              "id": "nav-tile-chapters-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-chapters",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-chapters-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Chapters",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              261,
+              -8,
+              126,
+              103
+            ]
+          }
+        },
+        {
+          "id": "nav-tile-skills",
+          "box": [
+            390,
+            5,
+            126,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "nav-tile-skills-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-skills",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-skills-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Skills",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              390,
+              4,
+              126,
+              103
+            ]
+          }
+        },
+        {
+          "id": "nav-tile-base",
+          "box": [
+            519,
+            5,
+            126,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "nav-tile-base-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-base",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-base-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Base",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-base-badge",
+              "box": [
+                102,
+                2,
+                22,
+                22
+              ],
+              "asset": "badge"
+            }
+          ],
+          "boxes": {
+            "compact": [
+              519,
+              4,
+              126,
+              103
+            ]
+          }
+        },
+        {
+          "id": "nav-tile-clan",
+          "box": [
+            648,
+            5,
+            126,
+            132
+          ],
+          "asset": "tab",
+          "children": [
+            {
+              "id": "nav-tile-clan-icon",
+              "box": [
+                22.08,
+                5,
+                81.84,
+                81.84
+              ],
+              "asset": "nav-clan",
+              "boxes": {
+                "compact": [
+                  32,
+                  6,
+                  62,
+                  64
+                ]
+              }
+            },
+            {
+              "id": "nav-tile-clan-copy",
+              "box": [
+                2,
+                99,
+                122,
+                27
+              ],
+              "text": "Clan",
+              "font": {
+                "size": 21,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426"
+              },
+              "boxes": {
+                "compact": [
+                  2,
+                  73,
+                  122,
+                  25
+                ]
+              }
+            }
+          ],
+          "boxes": {
+            "compact": [
+              648,
+              4,
+              126,
+              103
+            ]
+          },
+          "opacity": 0.78
+        }
+      ]
+    },
+    {
+      "id": "reveal-dim",
+      "box": [
+        0,
+        0,
+        800,
+        1731
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          0,
+          800,
+          1423
+        ]
+      },
+      "space": "screen",
+      "fill": "#0a1020",
+      "opacity": 0.86,
+      "visibleIn": [
+        "chest-flight",
+        "chest-opening",
+        "summary",
+        "closing"
+      ]
+    },
+    {
+      "id": "reveal-art",
+      "box": [
+        8,
+        390,
+        760,
+        750
+      ],
+      "boxes": {
+        "compact": [
+          8,
+          309,
+          760,
+          700
+        ]
+      },
+      "visibleIn": [
+        "chest-flight",
+        "chest-opening",
+        "summary"
+      ],
+      "children": [
+        {
+          "id": "reveal-rays",
+          "box": [
+            6,
+            8,
+            748,
+            730
+          ],
+          "asset": "rays",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-halo",
+          "box": [
+            144,
+            128,
+            472,
+            472
+          ],
+          "asset": "glow",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-dust",
+          "box": [
+            193,
+            491,
+            373,
+            140
+          ],
+          "asset": "dust",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-chest",
+          "box": [
+            190,
+            171,
+            380,
+            380
+          ],
+          "asset": "gift-ready",
+          "assetByState": {
+            "chest-opening": "gift-open-big",
+            "summary": "gift-open-big"
+          },
+          "origin": "50% 50%"
+        },
+        {
+          "id": "reveal-ring",
+          "box": [
+            127,
+            111,
+            506,
+            506
+          ],
+          "asset": "ring",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-0",
+          "box": [
+            134,
+            185,
+            62,
+            62
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-1",
+          "box": [
+            553,
+            220,
+            48,
+            48
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-2",
+          "box": [
+            210,
+            388,
+            42,
+            42
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-3",
+          "box": [
+            594,
+            357,
+            65,
+            65
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-4",
+          "box": [
+            420,
+            115,
+            55,
+            55
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        },
+        {
+          "id": "reveal-spark-5",
+          "box": [
+            360,
+            470,
+            60,
+            60
+          ],
+          "asset": "sparkle",
+          "opacity": 0
+        }
+      ],
+      "timelineOnly": true
+    },
+    {
+      "id": "reveal-tap",
+      "box": [
+        0,
+        0,
+        800,
+        1731
+      ],
+      "boxes": {
+        "compact": [
+          0,
+          0,
+          800,
+          1423
+        ]
+      },
+      "space": "screen",
+      "action": "skip",
+      "label": "Skip reward animation",
+      "visibleIn": [
+        "chest-flight",
+        "chest-opening"
+      ]
+    },
+    {
+      "id": "skip-hint",
+      "box": [
+        548,
+        43,
+        200,
+        66
+      ],
+      "boxes": {
+        "compact": [
+          548,
+          36,
+          200,
+          61
+        ]
+      },
+      "asset": "plate",
+      "text": "Tap to skip",
+      "font": {
+        "size": 24,
+        "stroke": "2.6px #101426",
+        "shadow": "0 3px 1px #101426"
+      },
+      "visibleIn": [
+        "chest-flight"
+      ],
+      "passThrough": true
+    },
+    {
+      "id": "reward-dialog",
+      "box": [
+        79,
+        555,
+        618,
+        570
+      ],
+      "boxes": {
+        "compact": [
+          79,
+          426,
+          618,
+          554
+        ]
+      },
+      "asset": "panel-highlight",
+      "modal": true,
+      "label": "Chapter rewards",
+      "visibleIn": [
+        "summary",
+        "closing"
+      ],
+      "qa": "safe",
+      "children": [
+        {
+          "id": "reward-heading",
+          "box": [
+            65,
+            -36,
+            488,
+            93
+          ],
+          "asset": "plate",
+          "text": "CHAPTER REWARDS",
+          "font": {
+            "size": 42,
+            "stroke": "3.8px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        },
+        {
+          "id": "reward-description",
+          "box": [
+            36,
+            75,
+            546,
+            72
+          ],
+          "text": {
+            "key": "rewardMessage"
+          },
+          "font": {
+            "size": 29,
+            "stroke": "2.6px #101426",
+            "shadow": "0 3px 1px #101426",
+            "minSize": 20
+          }
+        },
+        {
+          "id": "card-coin",
+          "box": [
+            35,
+            184,
+            178,
+            213
+          ],
+          "asset": "panel",
+          "children": [
+            {
+              "id": "card-icon-coin",
+              "box": [
+                35,
+                17,
+                108,
+                99
+              ],
+              "asset": "coin"
+            },
+            {
+              "id": "card-value-coin",
+              "box": [
+                6,
+                123,
+                166,
+                40
+              ],
+              "text": {
+                "key": "rewardCoin",
+                "prefix": "×"
+              },
+              "font": {
+                "size": 31,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "single": true,
+                "minSize": 23
+              }
+            },
+            {
+              "id": "card-label-coin",
+              "box": [
+                6,
+                165,
+                166,
+                33
+              ],
+              "text": "Coins",
+              "font": {
+                "size": 22,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "color": "#e2c299"
+              }
+            }
+          ]
+        },
+        {
+          "id": "card-gem",
+          "box": [
+            220,
+            184,
+            178,
+            213
+          ],
+          "asset": "panel",
+          "children": [
+            {
+              "id": "card-icon-gem",
+              "box": [
+                35,
+                17,
+                108,
+                99
+              ],
+              "asset": "gem"
+            },
+            {
+              "id": "card-value-gem",
+              "box": [
+                6,
+                123,
+                166,
+                40
+              ],
+              "text": {
+                "key": "rewardGem",
+                "prefix": "×"
+              },
+              "font": {
+                "size": 31,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "single": true
+              }
+            },
+            {
+              "id": "card-label-gem",
+              "box": [
+                6,
+                165,
+                166,
+                33
+              ],
+              "text": "Gems",
+              "font": {
+                "size": 22,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "color": "#e2c299"
+              }
+            }
+          ]
+        },
+        {
+          "id": "card-energy",
+          "box": [
+            405,
+            184,
+            178,
+            213
+          ],
+          "asset": "panel",
+          "children": [
+            {
+              "id": "card-icon-energy",
+              "box": [
+                35,
+                17,
+                108,
+                99
+              ],
+              "asset": "energy"
+            },
+            {
+              "id": "card-value-energy",
+              "box": [
+                6,
+                123,
+                166,
+                40
+              ],
+              "text": {
+                "key": "rewardEnergy",
+                "prefix": "×"
+              },
+              "font": {
+                "size": 31,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "single": true
+              }
+            },
+            {
+              "id": "card-label-energy",
+              "box": [
+                6,
+                165,
+                166,
+                33
+              ],
+              "text": "Energy",
+              "font": {
+                "size": 22,
+                "stroke": "2.6px #101426",
+                "shadow": "0 3px 1px #101426",
+                "color": "#e2c299"
+              }
+            }
+          ]
+        },
+        {
+          "id": "reward-dismiss",
+          "box": [
+            141,
+            447,
+            336,
+            91
+          ],
+          "asset": "primary",
+          "action": "dismiss",
+          "label": "Close chapter rewards",
+          "press": 0.95,
+          "qa": "touch",
+          "text": "CONTINUE",
+          "font": {
+            "size": 37,
+            "stroke": "3px #101426",
+            "shadow": "0 3px 1px #101426"
+          }
+        }
+      ]
+    }
+  ],
+  "motion": {
+    "reveal": {
+      "label": "Open chapter chest",
+      "trigger": "open",
+      "duration": 2360,
+      "phases": [
+        {
+          "at": 0,
+          "state": "chest-flight"
+        },
+        {
+          "at": 1720,
+          "state": "chest-opening"
+        },
+        {
+          "at": 2000,
+          "state": "summary"
+        }
+      ],
+      "events": [
+        {
+          "at": 2000,
+          "action": "claim-chapter-tasks"
+        }
+      ],
+      "skip": {
+        "at": 1720,
+        "after": 120,
+        "action": "skip",
+        "focus": "reveal-tap"
+      },
+      "reduced": "finish",
+      "focus": "reward-dismiss",
+      "interrupt": "Lock the flow during reveal. Skip jumps to opening. A teardown cancels visual tracks and restores input; disposition follows the authoritative grant.",
+      "tracks": [
+        {
+          "node": "reveal-chest",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              -57
+            ],
+            [
+              420,
+              0,
+              "smooth"
+            ],
+            [
+              820,
+              0
+            ],
+            [
+              940,
+              -11,
+              "outQuad"
+            ],
+            [
+              1070,
+              13
+            ],
+            [
+              1190,
+              -14
+            ],
+            [
+              1320,
+              17
+            ],
+            [
+              1470,
+              -21
+            ],
+            [
+              1580,
+              19
+            ],
+            [
+              1720,
+              0,
+              "step"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-chest",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              294
+            ],
+            [
+              163,
+              86,
+              "outCubic"
+            ],
+            [
+              280,
+              -55,
+              "outQuad"
+            ],
+            [
+              420,
+              0,
+              "inQuad"
+            ],
+            [
+              820,
+              0
+            ],
+            [
+              970,
+              -17,
+              "outQuad"
+            ],
+            [
+              1110,
+              0
+            ],
+            [
+              1330,
+              -26,
+              "outQuad"
+            ],
+            [
+              1510,
+              0
+            ],
+            [
+              1610,
+              -21
+            ],
+            [
+              1720,
+              0,
+              "step"
+            ]
+          ],
+          "keysByProfile": {
+            "compact": [
+              [
+                0,
+                205
+              ],
+              [
+                163,
+                62,
+                "outCubic"
+              ],
+              [
+                280,
+                -55,
+                "outQuad"
+              ],
+              [
+                420,
+                0,
+                "inQuad"
+              ],
+              [
+                820,
+                0
+              ],
+              [
+                970,
+                -17,
+                "outQuad"
+              ],
+              [
+                1110,
+                0
+              ],
+              [
+                1330,
+                -26,
+                "outQuad"
+              ],
+              [
+                1510,
+                0
+              ],
+              [
+                1610,
+                -21
+              ],
+              [
+                1720,
+                0,
+                "step"
+              ]
+            ]
+          }
+        },
+        {
+          "node": "reveal-chest",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.17
+            ],
+            [
+              420,
+              1,
+              "outCubic"
+            ],
+            [
+              530,
+              1.14,
+              "outQuad"
+            ],
+            [
+              810,
+              1,
+              "outBack"
+            ],
+            [
+              1720,
+              1.21,
+              "step"
+            ],
+            [
+              2060,
+              1,
+              "outBack"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-chest",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              0.17
+            ],
+            [
+              420,
+              1,
+              "outCubic"
+            ],
+            [
+              530,
+              0.86,
+              "outQuad"
+            ],
+            [
+              810,
+              1,
+              "outBack"
+            ],
+            [
+              1720,
+              1.21,
+              "step"
+            ],
+            [
+              2060,
+              1,
+              "outBack"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-chest",
+          "property": "rotate",
+          "keys": [
+            [
+              0,
+              -14
+            ],
+            [
+              420,
+              0,
+              "smooth"
+            ],
+            [
+              820,
+              0
+            ],
+            [
+              910,
+              -4
+            ],
+            [
+              1050,
+              6
+            ],
+            [
+              1190,
+              -7
+            ],
+            [
+              1340,
+              8
+            ],
+            [
+              1470,
+              -8
+            ],
+            [
+              1580,
+              9
+            ],
+            [
+              1720,
+              0,
+              "step"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-dim",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              280,
+              0.89,
+              "outQuad"
+            ],
+            [
+              2000,
+              0.89
+            ],
+            [
+              2360,
+              0.86,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-art",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              2060,
+              1
+            ],
+            [
+              2360,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-halo",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              420,
+              0
+            ],
+            [
+              800,
+              0.29,
+              "outQuad"
+            ],
+            [
+              1720,
+              0.68
+            ],
+            [
+              2020,
+              0.99,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-rays",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              640,
+              0.11,
+              "outQuad"
+            ],
+            [
+              1720,
+              0.37
+            ],
+            [
+              1880,
+              0.87,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-rays",
+          "property": "rotate",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              2360,
+              50
+            ]
+          ]
+        },
+        {
+          "node": "reveal-dust",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              419,
+              0
+            ],
+            [
+              470,
+              0.65,
+              "outQuad"
+            ],
+            [
+              1120,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-dust",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.35
+            ],
+            [
+              420,
+              0.35
+            ],
+            [
+              1120,
+              1.25,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-ring",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1720,
+              0.91,
+              "step"
+            ],
+            [
+              2280,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-ring",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.26
+            ],
+            [
+              1720,
+              0.26
+            ],
+            [
+              2280,
+              1.32,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-ring",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              0.26
+            ],
+            [
+              1720,
+              0.26
+            ],
+            [
+              2280,
+              1.32,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-0",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              1,
+              "step"
+            ],
+            [
+              2240,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-0",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              0
+            ],
+            [
+              2240,
+              -85,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-0",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              0
+            ],
+            [
+              2240,
+              -72,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-1",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              1,
+              "step"
+            ],
+            [
+              2275,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-1",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              0
+            ],
+            [
+              2275,
+              70,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-1",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              0
+            ],
+            [
+              2275,
+              -70,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-2",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              1,
+              "step"
+            ],
+            [
+              2310,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-2",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              0
+            ],
+            [
+              2310,
+              -90,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-2",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              0
+            ],
+            [
+              2310,
+              42,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-3",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              1,
+              "step"
+            ],
+            [
+              2240,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-3",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              0
+            ],
+            [
+              2240,
+              80,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-3",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1740,
+              0
+            ],
+            [
+              2240,
+              31,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-4",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              1,
+              "step"
+            ],
+            [
+              2275,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-4",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              0
+            ],
+            [
+              2275,
+              17,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-4",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1775,
+              0
+            ],
+            [
+              2275,
+              -88,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-5",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              1,
+              "step"
+            ],
+            [
+              2310,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-5",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              0
+            ],
+            [
+              2310,
+              -12,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-spark-5",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1810,
+              0
+            ],
+            [
+              2310,
+              58,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reward-dialog",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              2000,
+              0.36,
+              "step"
+            ],
+            [
+              2170,
+              1,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reward-dialog",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.88
+            ],
+            [
+              2000,
+              0.88
+            ],
+            [
+              2270,
+              1,
+              "outBack"
+            ]
+          ]
+        },
+        {
+          "node": "reward-dialog",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              0.88
+            ],
+            [
+              2000,
+              0.88
+            ],
+            [
+              2270,
+              1,
+              "outBack"
+            ]
+          ]
+        }
+      ],
+      "cues": [
+        {
+          "type": "sound",
+          "id": "meta.chest",
+          "at": 2000,
+          "preview": "muted"
+        }
+      ]
+    },
+    "dismiss": {
+      "label": "Dismiss rewards",
+      "trigger": "dismiss",
+      "duration": 240,
+      "phases": [
+        {
+          "at": 0,
+          "state": "closing"
+        },
+        {
+          "at": 240,
+          "state": "claimed"
+        }
+      ],
+      "events": [
+        {
+          "at": 240,
+          "action": "dismiss-last-grant"
+        }
+      ],
+      "reduced": "finish",
+      "focus": "reward-later",
+      "interrupt": "During close, input remains captured. Restore Journey and focus on the next reward indicator.",
+      "tracks": [
+        {
+          "node": "reward-dialog",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              240,
+              0,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reward-dialog",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              240,
+              0.94,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reward-dialog",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              240,
+              0.94,
+              "outQuad"
+            ]
+          ]
+        },
+        {
+          "node": "reveal-dim",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0.86
+            ],
+            [
+              240,
+              0,
+              "outQuad"
+            ]
+          ]
+        }
+      ]
+    }
+  }
+}

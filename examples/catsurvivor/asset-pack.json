@@ -1,0 +1,545 @@
+{
+  "id": "dusk-outpost",
+  "version": "1.0.0",
+  "assetRoot": "../../../CatSurvivor",
+  "provenance": {
+    "style": "Dusk Outpost",
+    "approvedTarget": "docs/ui-concepts/F_home.png",
+    "inventory": "docs/ui-style.md"
+  },
+  "assets": {
+    "home-bg": {
+      "path": "Assets/LastSurvival/MetaUI/Art/bg/home_bg.png",
+      "size": [
+        992,
+        1586
+      ],
+      "fit": "cover"
+    },
+    "arena": {
+      "path": "Assets/LastSurvival/MetaUI/Art/map/arena_1.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "fit": "cover"
+    },
+    "avatar": {
+      "path": "Assets/LastSurvival/MetaUI/Art/heroes/hero_1001.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "panel": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/panel.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "slice",
+      "slice": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ]
+    },
+    "panel-highlight": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/panel_hl.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "slice",
+      "slice": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "border": [
+        25,
+        25,
+        25,
+        25
+      ]
+    },
+    "tab": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/tab_bg.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "slice",
+      "slice": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "border": [
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    "tab-active": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/tab_active.png",
+      "size": [
+        300,
+        300
+      ],
+      "fit": "stretch"
+    },
+    "plate": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/plate.png",
+      "size": [
+        256,
+        96
+      ],
+      "fit": "slice",
+      "slice": [
+        0,
+        54,
+        0,
+        54
+      ],
+      "border": [
+        0,
+        17,
+        0,
+        17
+      ]
+    },
+    "capsule": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/capsule.png",
+      "size": [
+        372,
+        96
+      ],
+      "fit": "stretch"
+    },
+    "primary": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/btn_primary.png",
+      "size": [
+        744,
+        220
+      ],
+      "fit": "slice",
+      "slice": [
+        0,
+        117,
+        0,
+        117
+      ],
+      "border": [
+        0,
+        42,
+        0,
+        42
+      ]
+    },
+    "secondary": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/btn_secondary.png",
+      "size": [
+        744,
+        220
+      ],
+      "fit": "slice",
+      "slice": [
+        0,
+        117,
+        0,
+        117
+      ],
+      "border": [
+        0,
+        22,
+        0,
+        22
+      ]
+    },
+    "chip": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/chip.png",
+      "size": [
+        372,
+        110
+      ],
+      "fit": "stretch"
+    },
+    "chip-off": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/chip_off.png",
+      "size": [
+        372,
+        110
+      ],
+      "fit": "stretch"
+    },
+    "bar-bg": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/bar_bg.png",
+      "size": [
+        256,
+        40
+      ],
+      "fit": "stretch"
+    },
+    "bar-fill": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/bar_fill.png",
+      "size": [
+        256,
+        40
+      ],
+      "fit": "stretch"
+    },
+    "badge": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/badge.png",
+      "size": [
+        64,
+        64
+      ],
+      "fit": "contain"
+    },
+    "arrow-left": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/arrow_left.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "arrow-right": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/arrow_right.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "check": {
+      "path": "Assets/LastSurvival/MetaUI/Art/ui/check.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "gift-ready": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/gift_ready.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "gift-closed": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/gift_closed.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "gift-open": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/gift_open.png",
+      "size": [
+        128,
+        128
+      ],
+      "fit": "contain"
+    },
+    "gift-open-big": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/gift_open_big.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "glow": {
+      "path": "Assets/LastSurvival/MetaUI/Art/fx/glow.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "rays": {
+      "path": "Assets/LastSurvival/MetaUI/Art/fx/rays.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "fit": "contain"
+    },
+    "ring": {
+      "path": "Assets/LastSurvival/MetaUI/Art/fx/ring.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "sparkle": {
+      "path": "Assets/LastSurvival/MetaUI/Art/fx/sparkle.png",
+      "size": [
+        128,
+        128
+      ],
+      "fit": "contain"
+    },
+    "dust": {
+      "path": "Assets/LastSurvival/MetaUI/Art/reveal/dust.png",
+      "size": [
+        512,
+        512
+      ],
+      "fit": "contain"
+    },
+    "energy": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/energy.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "coin": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/coin.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "gem": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/gem.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "news": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/news.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "bag": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/bag.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "events": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/events.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "mail": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/mail.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "social": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/social.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "menu": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/menu.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "supply-drop": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/supply_drop.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "outpost-pass": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/outpost_pass.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "pack": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/pack.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "bonus": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/bonus.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "event": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/event.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "quests": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/quests.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "progress": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/progress.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "ranking": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/ranking.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "patrol-art": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/patrol_art.png",
+      "size": [
+        180,
+        110
+      ],
+      "fit": "contain"
+    },
+    "collection": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/collection.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "challenge": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/challenge.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "help": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/help.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "messages": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/messages.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-shop": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/shop.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-heroes": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/heroes.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-chapters": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/chapters.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-skills": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/skills.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-base": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/base.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "nav-clan": {
+      "path": "Assets/LastSurvival/MetaUI/Art/tabs/clan.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "power": {
+      "path": "Assets/LastSurvival/MetaUI/Art/home/power.png",
+      "size": [
+        256,
+        256
+      ],
+      "fit": "contain"
+    },
+    "lilita": {
+      "path": "Assets/LastSurvival/UI/Fonts/LilitaOne-Regular.ttf",
+      "fit": "font",
+      "license": "Assets/LastSurvival/UI/Fonts/LilitaOne - OFL.txt"
+    }
+  }
+}

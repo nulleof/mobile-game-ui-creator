@@ -1,0 +1,28 @@
+---
+name: mobile-ui-creator
+description: Design and specify polished UI for mobile live-service games. Use for a whole game's UI, a single game screen or HUD, a reward or modal flow, a reusable UI asset kit, or a game mockup or screenshot that needs an implementation-ready layout, state, and motion recipe.
+---
+
+# Mobile UI Creator
+
+Deliver the layout, artwork, and behavior a developer needs to build this UI in the game's own engine. Start from the player's task, use a distinct visual language, and make each screen verifiable with a frame assembled from its packaged assets.
+
+## 1. Establish the brief and find the existing UI
+
+- Read the caller's brief and inspect the target project for its navigation, current screens, player-facing strings, art, typography, components, state APIs, and motion conventions. Determine the orientation, supported viewport profiles, and primary player action. Ask about decisions that materially affect the result and cannot be inferred.
+- Treat a supplied screenshot as either an approved project target or a visual reference. Honor the layout and visual hierarchy of an approved target. Extract specific transferable principles from a visual reference, then design original artwork and composition. Ask which role applies when it is ambiguous.
+- For a whole game, map the screens, entry points, navigation and modal return paths. Name the shared shell and components. Choose one connected, high-value player flow and deliver a recipe for every screen or modal in that flow. Order the remaining screens by dependency and value.
+
+## 2. Establish or extend the asset kit
+
+- Reuse the approved pack when available. Inventory real files and inspect the assets at UI scale. Give each reusable asset a stable ID and record its real filename, dimensions, render mode, origin, and slice guides when applicable.
+- If the project lacks an approved direction, make two or three concept images of the same screen. Keep content and function fixed so the user can judge direction. Identify the material, contrast, color, icon language, and motion character of each choice. Return `awaiting-style-selection` with the concepts, and resume from the chosen concept.
+- After selection, create or acquire the individual raster pieces at their required sizes, using the host's image generation tools where available. Use a chosen concept as a style guide. Export transparent chrome, icons and effects as separate usable files. Keep imagery, reusable chrome, scalable regions, dynamic copy, prices, counters, and input layers independent. Inspect alpha edges and stretching at the intended sizes before listing files as ready.
+- Add a needed asset within the approved language. Keep existing versions intact for screens that reference them. Request agreement before changing the visual direction or replacing a shared asset. Record the selection, version, and provenance. With unavailable art or rendering tools, state the precise missing asset or capability and hand off a draft with status `blocked`.
+
+## 3. Write the recipe and verify the result
+
+- Use the project's established design folder, or `design/ui/`. Follow [the handoff contract](references/handoff.md) for filenames, JSON fields, safe areas, state and animation semantics. Deliver the current files to the calling chat by path, with a compact build order and open verification items.
+- Capture what happens on real player actions and data changes. Select motion by meaning: immediate touch response, movement that explains spatial change, energy at a payoff, and restrained loops for actionable attention. Describe the default, successful, interrupted and reduced-motion paths where relevant. Commands and authoritative state belong to gameplay. Keyframe inspection must have no gameplay side effects.
+- Render a PNG from the recipe and its actual layers. Use the project's capture workflow or a disposable local renderer. Inspect readable hierarchy, typography, scale, clipping, touch areas, safe insets and slice integrity on the relevant viewport profiles. For an approved target, put the two images side by side and record meaningful departures. For a new design, check the frame against the selected direction and the player's task. Label every unverified item in the handoff.
+- For the implementation examples, see [the CatSurvivor patterns](references/catsurvivor.md). The same workflow applies to another game, genre, orientation, and engine. The receiving chat maps the handoff to the target project's UI framework.

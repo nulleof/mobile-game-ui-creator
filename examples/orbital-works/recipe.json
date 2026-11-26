@@ -1,0 +1,751 @@
+{
+  "id": "reactor-sector",
+  "title": "Orbital Works · Reactor sector",
+  "pack": {
+    "id": "abyss-signal",
+    "version": "1.0.0"
+  },
+  "reference": {
+    "role": "approved-target",
+    "path": "concepts/b-abyss-signal.png"
+  },
+  "design": {
+    "width": 1280,
+    "profiles": {
+      "landscape": {
+        "viewport": [
+          1600,
+          900
+        ],
+        "safeInsets": [
+          27,
+          29,
+          26,
+          29
+        ]
+      }
+    }
+  },
+  "theme": {
+    "text": "#e5faf7"
+  },
+  "data": {
+    "balance": 380,
+    "lowBalance": 120,
+    "remaining": 140,
+    "level": "02",
+    "nextLevel": "03",
+    "power": 120,
+    "nextPower": 165,
+    "cost": 240
+  },
+  "actions": {
+    "upgrade": {
+      "type": "input",
+      "from": [
+        "ready"
+      ],
+      "contract": "Request the upgrade through the game state using the current station ID and level."
+    },
+    "upgrade-sector": {
+      "type": "event",
+      "contract": "Commit one upgrade in the fixture. Use confirmed level, power, balance, and transaction status in the game."
+    }
+  },
+  "states": {
+    "ready": {
+      "label": "Upgrade available"
+    },
+    "upgrading": {
+      "label": "Upgrade effect"
+    },
+    "upgraded": {
+      "label": "Upgrade complete"
+    },
+    "insufficient": {
+      "label": "Insufficient energy"
+    }
+  },
+  "initialState": "ready",
+  "nodes": [
+    {
+      "id": "station-art",
+      "box": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "asset": "station",
+      "space": "screen"
+    },
+    {
+      "id": "right-shade",
+      "box": [
+        637,
+        0,
+        643,
+        720
+      ],
+      "space": "screen",
+      "fill": "linear-gradient(90deg, transparent, #020f17af 37%, #020a11f0)"
+    },
+    {
+      "id": "title-bar",
+      "box": [
+        1,
+        7,
+        328,
+        55
+      ],
+      "asset": "panel",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "orbit-icon",
+          "box": [
+            16,
+            9,
+            49,
+            36
+          ],
+          "asset": "orbit"
+        },
+        {
+          "id": "orbital-title",
+          "box": [
+            72,
+            0,
+            244,
+            54
+          ],
+          "text": "ORBITAL WORKS",
+          "font": {
+            "size": 22,
+            "weight": 800,
+            "single": true,
+            "align": "left",
+            "shadow": "0 2px 5px #011010",
+            "tracking": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "balance",
+      "box": [
+        1019,
+        7,
+        212,
+        55
+      ],
+      "asset": "panel",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "balance-icon",
+          "box": [
+            16,
+            8,
+            35,
+            39
+          ],
+          "asset": "energy"
+        },
+        {
+          "id": "balance-value",
+          "box": [
+            67,
+            0,
+            130,
+            55
+          ],
+          "text": {
+            "key": "balance"
+          },
+          "font": {
+            "size": 29,
+            "weight": 800,
+            "single": true,
+            "align": "right",
+            "shadow": "0 2px 5px #011010"
+          },
+          "textByState": {
+            "upgraded": {
+              "key": "remaining"
+            },
+            "insufficient": {
+              "key": "lowBalance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "station-pulse",
+      "box": [
+        243,
+        152,
+        279,
+        300
+      ],
+      "asset": "pulse",
+      "visibleIn": [
+        "upgrading"
+      ],
+      "timelineOnly": true
+    },
+    {
+      "id": "sector",
+      "box": [
+        707,
+        87,
+        524,
+        581
+      ],
+      "asset": "panel",
+      "qa": "safe",
+      "children": [
+        {
+          "id": "sector-symbol",
+          "box": [
+            27,
+            24,
+            86,
+            86
+          ],
+          "asset": "reactor"
+        },
+        {
+          "id": "sector-heading",
+          "box": [
+            125,
+            28,
+            365,
+            72
+          ],
+          "text": "REACTOR SECTOR",
+          "font": {
+            "size": 34,
+            "weight": 800,
+            "single": true,
+            "align": "left",
+            "shadow": "0 2px 5px #011010",
+            "tracking": 1,
+            "minSize": 26
+          }
+        },
+        {
+          "id": "level-frame",
+          "box": [
+            29,
+            132,
+            464,
+            69
+          ],
+          "asset": "panel",
+          "children": [
+            {
+              "id": "level-label",
+              "box": [
+                21,
+                0,
+                114,
+                67
+              ],
+              "text": "LEVEL",
+              "font": {
+                "size": 22,
+                "weight": 800,
+                "single": true,
+                "align": "left",
+                "shadow": "0 2px 5px #011010",
+                "color": "#a6c9ce",
+                "tracking": 1.3
+              }
+            },
+            {
+              "id": "level-value",
+              "box": [
+                158,
+                0,
+                82,
+                67
+              ],
+              "text": {
+                "key": "level"
+              },
+              "font": {
+                "size": 42,
+                "weight": 800,
+                "single": true,
+                "align": "center",
+                "shadow": "0 2px 5px #011010"
+              },
+              "textByState": {
+                "upgraded": {
+                  "key": "nextLevel"
+                }
+              }
+            },
+            {
+              "id": "level-arrow",
+              "box": [
+                257,
+                18,
+                48,
+                30
+              ],
+              "asset": "arrow",
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            },
+            {
+              "id": "level-next",
+              "box": [
+                317,
+                0,
+                120,
+                67
+              ],
+              "text": {
+                "key": "nextLevel"
+              },
+              "font": {
+                "size": 42,
+                "weight": 800,
+                "single": true,
+                "align": "right",
+                "shadow": "0 2px 5px #011010",
+                "color": "#6cfbda"
+              },
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "output-frame",
+          "box": [
+            29,
+            220,
+            464,
+            116
+          ],
+          "asset": "panel",
+          "children": [
+            {
+              "id": "output-icon",
+              "box": [
+                14,
+                23,
+                72,
+                67
+              ],
+              "asset": "power"
+            },
+            {
+              "id": "output-label",
+              "box": [
+                104,
+                14,
+                345,
+                30
+              ],
+              "text": "POWER OUTPUT",
+              "font": {
+                "size": 22,
+                "weight": 800,
+                "single": true,
+                "align": "left",
+                "shadow": "0 2px 5px #011010",
+                "color": "#a6c9ce",
+                "tracking": 1.4
+              }
+            },
+            {
+              "id": "output-value",
+              "box": [
+                104,
+                43,
+                118,
+                65
+              ],
+              "text": {
+                "key": "power"
+              },
+              "font": {
+                "size": 43,
+                "weight": 800,
+                "single": true,
+                "align": "left",
+                "shadow": "0 2px 5px #011010",
+                "minSize": 31
+              },
+              "textByState": {
+                "upgraded": {
+                  "key": "nextPower"
+                }
+              }
+            },
+            {
+              "id": "output-arrow",
+              "box": [
+                241,
+                61,
+                48,
+                30
+              ],
+              "asset": "arrow",
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            },
+            {
+              "id": "output-next",
+              "box": [
+                310,
+                43,
+                127,
+                65
+              ],
+              "text": {
+                "key": "nextPower"
+              },
+              "font": {
+                "size": 43,
+                "weight": 800,
+                "single": true,
+                "align": "right",
+                "shadow": "0 2px 5px #011010",
+                "color": "#6cfbda"
+              },
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "power-track",
+          "box": [
+            33,
+            365,
+            456,
+            39
+          ],
+          "asset": "progress-track",
+          "children": [
+            {
+              "id": "meter-1",
+              "box": [
+                13,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "ready": "progress-fill",
+                "upgrading": "progress-fill",
+                "upgraded": "progress-fill",
+                "insufficient": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-2",
+              "box": [
+                74,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "ready": "progress-fill",
+                "upgrading": "progress-fill",
+                "upgraded": "progress-fill",
+                "insufficient": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-3",
+              "box": [
+                135,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "ready": "progress-fill",
+                "upgrading": "progress-fill",
+                "upgraded": "progress-fill",
+                "insufficient": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-4",
+              "box": [
+                196,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "ready": "progress-fill",
+                "upgrading": "progress-fill",
+                "upgraded": "progress-fill",
+                "insufficient": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-5",
+              "box": [
+                257,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "upgraded": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-6",
+              "box": [
+                318,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {
+                "upgraded": "progress-fill"
+              }
+            },
+            {
+              "id": "meter-7",
+              "box": [
+                379,
+                6,
+                58,
+                27
+              ],
+              "asset": "progress-track",
+              "assetByState": {}
+            }
+          ]
+        },
+        {
+          "id": "upgrade",
+          "box": [
+            30,
+            431,
+            464,
+            108
+          ],
+          "asset": "button",
+          "qa": "touch",
+          "action": "upgrade",
+          "label": "Upgrade reactor sector for 240 energy",
+          "pressedAsset": "button-pressed",
+          "assetByState": {
+            "upgrading": "button-pressed",
+            "upgraded": "button-disabled",
+            "insufficient": "button-disabled"
+          },
+          "disabledIn": [
+            "upgrading",
+            "upgraded",
+            "insufficient"
+          ],
+          "press": 0.98,
+          "children": [
+            {
+              "id": "upgrade-label",
+              "box": [
+                13,
+                5,
+                438,
+                55
+              ],
+              "text": "UPGRADE",
+              "font": {
+                "size": 39,
+                "weight": 800,
+                "single": true,
+                "align": "center",
+                "shadow": "0 2px 5px #011010",
+                "tracking": 1.5,
+                "minSize": 24
+              },
+              "textByState": {
+                "upgrading": "UPGRADING",
+                "upgraded": "UPGRADED",
+                "insufficient": "INSUFFICIENT ENERGY"
+              }
+            },
+            {
+              "id": "cost-icon",
+              "box": [
+                171,
+                62,
+                38,
+                36
+              ],
+              "asset": "energy",
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            },
+            {
+              "id": "upgrade-cost",
+              "box": [
+                220,
+                58,
+                90,
+                41
+              ],
+              "text": {
+                "key": "cost"
+              },
+              "font": {
+                "size": 29,
+                "weight": 800,
+                "single": true,
+                "align": "left",
+                "shadow": "0 2px 5px #011010"
+              },
+              "visibleIn": [
+                "ready",
+                "upgrading",
+                "insufficient"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "motion": {
+    "upgrade": {
+      "label": "Reactor recalibration",
+      "trigger": "upgrade",
+      "duration": 660,
+      "phases": [
+        {
+          "at": 0,
+          "state": "upgrading"
+        },
+        {
+          "at": 660,
+          "state": "upgraded"
+        }
+      ],
+      "events": [
+        {
+          "at": 660,
+          "action": "upgrade-sector"
+        }
+      ],
+      "reduced": "finish",
+      "interrupt": "Serialise one upgrade per station. On engine interruption, re-read the authoritative upgrade status.",
+      "tracks": [
+        {
+          "node": "station-pulse",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              120,
+              0.86,
+              "outQuad"
+            ],
+            [
+              235,
+              0.95
+            ],
+            [
+              660,
+              0,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "station-pulse",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              0.56
+            ],
+            [
+              235,
+              1,
+              "outBack"
+            ],
+            [
+              660,
+              1.4,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "station-pulse",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              0.56
+            ],
+            [
+              235,
+              1,
+              "outBack"
+            ],
+            [
+              660,
+              1.4,
+              "outCubic"
+            ]
+          ]
+        },
+        {
+          "node": "station-pulse",
+          "property": "rotate",
+          "keys": [
+            [
+              0,
+              -8
+            ],
+            [
+              660,
+              23,
+              "outQuad"
+            ]
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "id": "abyss-signal",
+  "version": "1.0.0",
+  "provenance": {
+    "approvedConcept": "concepts/b-abyss-signal.png",
+    "selection": "confirmed",
+    "visualSource": "ImageGen",
+    "symbols": "sources/symbols.png",
+    "chrome": "sources/chrome.png",
+    "progress": "Procedural PNG export in matching palette"
+  },
+  "assets": {
+    "station": {
+      "path": "assets/station.png",
+      "size": [
+        1672,
+        941
+      ],
+      "fit": "cover"
+    },
+    "panel": {
+      "path": "assets/panel.png",
+      "size": [
+        490,
+        469
+      ],
+      "fit": "slice",
+      "slice": [
+        76,
+        72,
+        72,
+        72
+      ],
+      "border": [
+        18,
+        22,
+        18,
+        22
+      ]
+    },
+    "button": {
+      "path": "assets/button.png",
+      "size": [
+        758,
+        229
+      ],
+      "fit": "slice",
+      "slice": [
+        62,
+        92,
+        57,
+        92
+      ],
+      "border": [
+        18,
+        30,
+        18,
+        30
+      ]
+    },
+    "button-pressed": {
+      "path": "assets/button-pressed.png",
+      "size": [
+        744,
+        196
+      ],
+      "fit": "slice",
+      "slice": [
+        51,
+        92,
+        50,
+        92
+      ],
+      "border": [
+        18,
+        30,
+        18,
+        30
+      ]
+    },
+    "button-disabled": {
+      "path": "assets/button-disabled.png",
+      "size": [
+        751,
+        196
+      ],
+      "fit": "slice",
+      "slice": [
+        51,
+        92,
+        50,
+        92
+      ],
+      "border": [
+        18,
+        30,
+        18,
+        30
+      ]
+    },
+    "energy": {
+      "path": "assets/energy.png",
+      "size": [
+        236,
+        267
+      ],
+      "fit": "contain"
+    },
+    "orbit": {
+      "path": "assets/orbit.png",
+      "size": [
+        292,
+        229
+      ],
+      "fit": "contain"
+    },
+    "reactor": {
+      "path": "assets/reactor.png",
+      "size": [
+        248,
+        260
+      ],
+      "fit": "contain"
+    },
+    "power": {
+      "path": "assets/power.png",
+      "size": [
+        239,
+        244
+      ],
+      "fit": "contain"
+    },
+    "arrow": {
+      "path": "assets/arrow.png",
+      "size": [
+        231,
+        165
+      ],
+      "fit": "contain"
+    },
+    "pulse": {
+      "path": "assets/pulse.png",
+      "size": [
+        287,
+        296
+      ],
+      "fit": "contain"
+    },
+    "progress-track": {
+      "path": "assets/progress-track.png",
+      "size": [
+        256,
+        48
+      ],
+      "fit": "slice",
+      "slice": [
+        0,
+        24,
+        0,
+        24
+      ],
+      "border": [
+        0,
+        16,
+        0,
+        16
+      ]
+    },
+    "progress-fill": {
+      "path": "assets/progress-fill.png",
+      "size": [
+        256,
+        48
+      ],
+      "fit": "slice",
+      "slice": [
+        0,
+        24,
+        0,
+        24
+      ],
+      "border": [
+        0,
+        14,
+        0,
+        14
+      ]
+    }
+  }
+}
