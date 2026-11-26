@@ -86,10 +86,11 @@ async function browserSession() {
       await run('Emulation.setEmulatedMedia', {
         features: [{ name: 'prefers-reduced-motion', value: settings.reduced ? 'reduce' : 'no-preference' }],
       });
-      await run('Page.navigate', { url: `${preview.url}?${new URLSearchParams({ profile, clean: '1', ...settings })}` });
+      const url = `${preview.url}?${new URLSearchParams({ profile, clean: '1', ...settings })}`;
+      await run('Page.navigate', { url });
       await until(async () => {
-        const state = await read(`document.querySelector('#failure')?.textContent ||
-          (document.documentElement.dataset.ready === '1' && document.querySelector('#stage').dataset.profile === '${profile}' ? 'ready' : '')`).catch(() => '');
+        const state = await read(`location.href === ${JSON.stringify(url)} && (document.querySelector('#failure')?.textContent ||
+          (document.documentElement.dataset.ready === '1' && document.querySelector('#stage').dataset.profile === '${profile}' ? 'ready' : ''))`).catch(() => '');
         if (state && state !== 'ready') throw new Error(state);
         return state === 'ready';
       }, `Preview did not load: ${profile}`);
@@ -158,12 +159,26 @@ const settled = (browser, state) => until(
   `Did not settle to ${state}`,
 );
 const focus = (browser) => browser.read('document.activeElement.dataset.node');
+const transform = (browser, id) => browser.read(`document.querySelector('[data-node="${id}"]').style.transform`);
+const opacity = (browser, id) => browser.read(`Number(document.querySelector('[data-node="${id}"]').style.opacity)`);
+
+async function waitForOffset(browser, id, axis, predicate) {
+  return until(async () => {
+    const value = await browser.read(`(() => {
+      const node = document.querySelector('[data-node="${id}"]');
+      const matrix = getComputedStyle(node).transform;
+      return matrix === 'none' ? 0 : new DOMMatrix(matrix).${axis};
+    })()`);
+    return predicate(value);
+  }, `Idle track did not move: ${id}`, 5500);
+}
 
 async function checkRewards(browser, preview, profile) {
   let summary;
   for (const scenario of ['normal', 'skip', 'rapid', 'reduced']) {
     await browser.page(preview, profile, scenario === 'reduced' ? { reduced: '1' } : {});
     await browser.click('reward-trigger');
+    assert.equal(await transform(browser, 'reward-trigger-icon'), '');
     if (scenario === 'skip') {
       const { after, at } = preview.recipe.motion.reveal.skip;
       await until(() => browser.read(`window.preview.time >= ${after}`), 'Skip debounce did not elapse');
@@ -193,12 +208,34 @@ async function checkRewards(browser, preview, profile) {
   await browser.click('chapter-back');
   await settled(browser, 'claimed');
   assert.deepEqual(await logged(browser), { 'claim-chapter-tasks': 1, 'dismiss-last-grant': 1 });
+  assert.equal(await transform(browser, 'reward-trigger-icon'), '');
   await browser.page(preview, profile, { sequence: 'reveal', t: '2110' });
   assert.equal(await browser.read('window.preview.state'), 'summary');
   assert.deepEqual(await logged(browser), {});
   await browser.read(`window.preview.seek('reveal', 420)`);
   assert.equal(await browser.read('window.preview.state'), 'chest-flight');
   assert.deepEqual(await logged(browser), {});
+}
+
+async function checkChestIdle(browser, preview) {
+  await browser.page(preview, 'tall');
+  const target = () => browser.read(`document.querySelector('[data-node="reward-trigger"]').getBoundingClientRect().toJSON()`);
+  const hitArea = await target();
+  await waitForOffset(browser, 'reward-trigger-icon', 'm42', (value) => value < -3);
+  assert.deepEqual(await target(), hitArea);
+  await browser.click('arena-title');
+  await settled(browser, 'chapter-detail');
+  assert.equal(await transform(browser, 'reward-trigger-icon'), '');
+  await browser.page(preview, 'tall', { sequence: 'ready-reward', t: '545' });
+  const still = await transform(browser, 'reward-trigger-icon');
+  assert.match(still, /-9px/);
+  await delay(150);
+  assert.equal(await transform(browser, 'reward-trigger-icon'), still);
+  assert.deepEqual(await logged(browser), {});
+  await browser.page(preview, 'tall', { reduced: '1' });
+  await delay(380);
+  assert.equal(await transform(browser, 'reward-trigger-icon'), '');
+  console.log('OK chest cue, stable hit area, navigation and scrub');
 }
 
 async function checkRoute(browser, preview, { profile, enter, back, initial, destination, reduced }) {
@@ -309,17 +346,23 @@ async function checkReactorImpacts(browser, preview, captures, viewport) {
   console.log('OK reactor value transfer and synchronized impacts');
 }
 
-async function checkStation(browser, preview, captures, viewport) {
+async function checkStation(browser, preview) {
   const route = { profile: 'landscape', enter: 'reactor-entry', back: 'reactor-back', initial: 'station', destination: 'ready' };
   for (const reduced of [false, true]) {
     await checkRoute(browser, preview, { ...route, reduced });
+    if (!reduced) await waitForOffset(browser, 'overview-reactor-icon', 'm42', (value) => value < -2);
+    else assert.equal(await transform(browser, 'overview-reactor-icon'), '');
     await browser.click('reactor-entry');
     await settled(browser, 'ready');
     await assertBounds(browser);
     await assertCopy(browser, ['orbital-title', 'sector-heading', 'level-value', 'output-value', 'upgrade-label']);
     const count = await browser.read(`new Set([...document.querySelectorAll('.art')].filter(art => art.getClientRects().length).map(art => art.dataset.asset)).size`);
     assert.ok(count >= 8, 'Station capture needs independently composed assets');
+    assert.equal(await transform(browser, 'overview-reactor-icon'), '');
+    if (!reduced) await until(async () => await opacity(browser, 'upgrade-sheen') > 0.4, 'No shine on an available upgrade');
+    else assert.equal(await opacity(browser, 'upgrade-sheen'), 0);
     await browser.click('upgrade');
+    assert.equal(await opacity(browser, 'upgrade-sheen'), 0);
     if (reduced) {
       assert.equal(await browser.read('window.preview.time'), undefined);
       assert.ok(await browser.read(`document.querySelector('[data-node="output-flare"]').hidden`));
@@ -333,13 +376,81 @@ async function checkStation(browser, preview, captures, viewport) {
     const overview = await browser.read(`['balance-value', 'overview-reactor-level', 'overview-reactor-output']
       .map(id => document.querySelector('[data-node="' + id + '"] .copy').textContent.trim())`);
     assert.deepEqual(overview, ['140', 'Level 03', 'Power output   165']);
-    if (!reduced) await browser.capture(join(captures, 'station-upgraded-landscape.png'), viewport);
     await browser.click('reactor-entry');
     await settled(browser, 'upgraded');
     assert.deepEqual(await logged(browser), { 'upgrade-sector': 1 });
     assert.ok(await browser.read(`document.querySelector('[data-node="upgrade"]').disabled`));
+    assert.equal(await transform(browser, 'upgrade-sheen'), '');
   }
   console.log('OK station navigation, focus, reduced motion and persistent upgrade');
+}
+
+async function checkLoading(browser, preview, captures, viewport) {
+  const progress = () => browser.read(`(() => {
+    const meter = document.querySelector('[data-node="loading-meter"]');
+    const fill = document.querySelector('[data-node="loading-fill"]');
+    return {
+      value: meter.getAttribute('aria-valuenow'),
+      caption: document.querySelector('[data-node="loading-value"] .copy').textContent,
+      clip: fill.style.clipPath,
+      status: document.querySelector('[data-node="loading-status"] .copy').textContent,
+    };
+  })()`);
+  async function choose(id) {
+    await browser.read(`(() => {
+      const option = document.querySelector('select[aria-label="Loading demo"]');
+      option.value = '${id}';
+      option.dispatchEvent(new Event('change'));
+    })()`);
+  }
+  await browser.page(preview, 'landscape', { clean: '0' });
+  await choose('measured');
+  assert.equal((await progress()).value, '20');
+  await until(() => browser.read("window.preview.state === 'loading-hold'"), 'Measured demo never reached 55%');
+  const before = await progress();
+  assert.deepEqual([before.value, before.caption, before.clip], ['55', '55%', 'inset(0px 45% 0px 0px)']);
+  const shine = await transform(browser, 'loading-sheen');
+  await until(async () => {
+    const current = await transform(browser, 'loading-sheen');
+    return current !== shine && await opacity(browser, 'loading-sheen') > 0.5;
+  }, 'Shine stopped while progress was held at 55%', 1800);
+  assert.deepEqual(await progress(), before);
+  await settled(browser, 'loading-done');
+  assert.equal((await progress()).value, '100');
+  assert.equal(await opacity(browser, 'loading-sheen'), 0);
+  assert.deepEqual(await logged(browser), {});
+
+  await choose('unknown');
+  await waitForOffset(browser, 'loading-unknown-band', 'm41', (value) => value > 12);
+  const unknown = await progress();
+  assert.equal(unknown.value, null);
+  assert.equal(unknown.caption, '');
+  await choose('paused');
+  assert.equal((await progress()).status, 'Loading paused');
+  assert.equal((await progress()).value, '55');
+  assert.equal(await opacity(browser, 'loading-sheen'), 0);
+  assert.equal(await transform(browser, 'loading-unknown-band'), '');
+  await choose('');
+  await settled(browser, 'station');
+
+  await browser.page(preview, 'landscape', { reduced: '1', demo: 'measured' });
+  await until(() => browser.read("window.preview.state === 'loading-hold'"), 'Reduced motion stopped progress updates');
+  assert.equal((await progress()).value, '55');
+  assert.equal(await transform(browser, 'loading-sheen'), '');
+  await settled(browser, 'loading-done');
+
+  for (const [name, options] of [
+    ['loading-hold', { sequence: 'loading-shine', t: '450' }],
+    ['loading-unknown', { sequence: 'loading-indeterminate', t: '630' }],
+    ['loading-paused', { state: 'loading-paused' }],
+  ]) {
+    await browser.page(preview, 'landscape', options);
+    await assertBounds(browser);
+    await assertCopy(browser, ['loading-status']);
+    assert.deepEqual(await logged(browser), {});
+    await browser.capture(join(captures, `${name}-landscape.png`), viewport);
+  }
+  console.log('OK measured, held, unknown, paused, done and reduced progress states');
 }
 
 const examples = process.argv[2] ? [process.argv[2]] : ['catsurvivor', 'orbital-works'];
@@ -350,7 +461,7 @@ try {
     const preview = await makePreview(name);
     const captures = resolve(repo, 'examples', name, 'captures');
     for (const [profile, { viewport }] of Object.entries(preview.recipe.design.profiles)) {
-      const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready', 'upgraded'];
+      const states = name === 'catsurvivor' ? ['journey', 'summary', 'chapter-detail'] : ['station', 'ready', 'upgraded', 'station-upgraded'];
       for (const state of states) {
         await browser.page(preview, profile, { state });
         await assertBounds(browser);
@@ -372,14 +483,16 @@ try {
       await browser.page(preview, 'tall', { sequence: 'reveal', t: '1880' });
       await browser.capture(join(captures, 'opening-tall.png'), viewport);
       await checkVisibility(browser, preview);
+      await checkChestIdle(browser, preview);
       await browser.page(preview, 'tall', { sequence: 'show-enemies', t: '80' });
       assert.equal(await browser.read('window.preview.screen'), 'chapter');
       assert.deepEqual(await logged(browser), {});
       await browser.capture(join(captures, 'transition-enemies-tall.png'), viewport);
     } else {
       const { viewport } = preview.recipe.design.profiles.landscape;
-      await checkStation(browser, preview, captures, viewport);
+      await checkStation(browser, preview);
       await checkReactorImpacts(browser, preview, captures, viewport);
+      await checkLoading(browser, preview, captures, viewport);
       await browser.page(preview, 'landscape', { sequence: 'open-reactor', t: '80' });
       assert.equal(await browser.read('window.preview.screen'), 'reactor');
       assert.deepEqual(await logged(browser), {});

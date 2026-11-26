@@ -4521,5 +4521,99 @@
     "chapter": {
       "initial": "chapter-detail"
     }
+  },
+  "loops": {
+    "ready-reward": {
+      "label": "Ready chest · Idle cue",
+      "period": 3600,
+      "states": [
+        "journey"
+      ],
+      "control": "reward-trigger",
+      "tracks": [
+        {
+          "node": "reward-trigger-icon",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              225,
+              0
+            ],
+            [
+              545,
+              -9,
+              "smooth"
+            ],
+            [
+              795,
+              0,
+              "smooth"
+            ],
+            [
+              875,
+              -2,
+              "smooth"
+            ],
+            [
+              1000,
+              0,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "reward-trigger-icon",
+          "property": "scaleX",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              225,
+              1
+            ],
+            [
+              545,
+              1.06,
+              "smooth"
+            ],
+            [
+              1000,
+              1,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "reward-trigger-icon",
+          "property": "scaleY",
+          "keys": [
+            [
+              0,
+              1
+            ],
+            [
+              225,
+              1
+            ],
+            [
+              545,
+              1.06,
+              "smooth"
+            ],
+            [
+              1000,
+              1,
+              "smooth"
+            ]
+          ]
+        }
+      ]
+    }
   }
 }

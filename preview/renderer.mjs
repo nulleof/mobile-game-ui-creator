@@ -101,6 +101,20 @@ function visibleIn(source, state, playing) {
   return (!source.timelineOnly || playing) && (!source.visibleIn || source.visibleIn.includes(state));
 }
 
+function sampleTracks(tracks, profile, time) {
+  const result = new Map();
+  for (const track of tracks) {
+    const values = result.get(track.node) ?? {};
+    values[track.property] = sample(track.keysByProfile?.[profile] ?? track.keys, time);
+    result.set(track.node, values);
+  }
+  return result;
+}
+
+function transformStyle(values) {
+  return `translate(${px(values.x ?? 0)}, ${px(values.y ?? 0)}) rotate(${values.rotate ?? 0}deg) scale(${values.scaleX ?? 1}, ${values.scaleY ?? 1})`;
+}
+
 function visibilityChanges(nodes, sequence, start, defaults) {
   const changes = new Map();
   let duration = sequence.duration;
@@ -131,8 +145,8 @@ async function mount(pack, recipe) {
   const profileNames = Object.keys(profiles);
   let profile = Object.hasOwn(profiles, params.get('profile')) ? params.get('profile') : profileNames[0];
   let fixture = Object.hasOwn(recipe.fixtures ?? {}, params.get('fixture')) ? params.get('fixture') : 'default';
-  const defaultReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let reduced = params.get('reduced') === '1' || defaultReduced;
+  const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+  let reduced = params.get('reduced') === '1' || motionPreference.matches;
   let state = recipe.initialState;
   let counts = {};
   let claimed = false;
@@ -141,12 +155,19 @@ async function mount(pack, recipe) {
   let request = 0;
   let previousTime = 0;
   let scale = 1;
+  let manualLoop = null;
+  let demo = null;
+  let loopRequest = 0;
+  const activeLoops = new Map();
   const nodes = new Map();
   const screens = new Map();
   const remembered = new Map();
   const history = [];
   const screenOf = (id) => recipe.states[id]?.screen;
   const visuals = new Map(Object.entries(recipe.motion));
+  const loops = Object.entries(recipe.loops ?? {});
+  const demos = Object.entries(recipe.previewDemos ?? {});
+  for (const [id, loop] of loops) visuals.set(id, { label: loop.label, loop });
   for (const [id, spec] of Object.entries(recipe.actions)) {
     if (spec.navigate) visuals.set(id, { label: spec.navigate.label, routeAction: id });
   }
@@ -180,6 +201,10 @@ async function mount(pack, recipe) {
     if (source.modal) {
       element.setAttribute('role', 'dialog');
       element.setAttribute('aria-modal', 'true');
+      element.setAttribute('aria-label', source.label);
+    }
+    if (source.progress) {
+      element.setAttribute('role', 'progressbar');
       element.setAttribute('aria-label', source.label);
     }
     if (enabled) {
@@ -257,10 +282,74 @@ async function mount(pack, recipe) {
     draw();
   }
 
-  function getText(text) {
+  function getText(text, state) {
     if (typeof text !== 'object') return text;
+    if (text.progress) {
+      const value = recipe.states[state].progress?.value;
+      return value === undefined ? '' : `${value}%`;
+    }
     const value = recipe.fixtures?.[fixture]?.[text.key] ?? recipe.data[text.key];
     return `${text.prefix ?? ''}${value}${text.suffix ?? ''}`;
+  }
+
+  function paintLoop(loop, time) {
+    for (const [id, values] of sampleTracks(loop.tracks, profile, time)) {
+      const { element, source } = nodes.get(id);
+      element.style.transform = transformStyle(values);
+      element.style.opacity = values.opacity ?? source.opacity ?? 1;
+    }
+  }
+
+  function stopLoops() {
+    for (const { loop } of activeLoops.values()) {
+      for (const track of loop.tracks) {
+        const { element, source } = nodes.get(track.node);
+        element.style.transform = '';
+        element.style.opacity = source.opacity ?? 1;
+      }
+    }
+    activeLoops.clear();
+    cancelAnimationFrame(loopRequest);
+    loopRequest = 0;
+  }
+
+  function paintActiveLoops(now) {
+    for (const { loop, start } of activeLoops.values()) {
+      paintLoop(loop, Math.max(0, now - start) % loop.period);
+    }
+  }
+
+  function loopFrame(now) {
+    paintActiveLoops(now);
+    loopRequest = requestAnimationFrame(loopFrame);
+  }
+
+  function syncLoops(visual) {
+    if (reduced || document.hidden) return;
+    if (manualLoop) {
+      paintLoop(manualLoop.loop, manualLoop.time);
+      return;
+    }
+    if (manual || (animation && !animation.sequence?.allowLoops)) return;
+    const now = performance.now();
+    const modal = [...nodes.values()].some(({ source, element }) => source.modal && !element.closest('[hidden], [inert]'));
+    for (const [id, loop] of loops) {
+      const control = nodes.get(loop.control)?.element;
+      const available = (!control || (!control.disabled && !control.closest('[hidden], [inert]'))) &&
+        loop.tracks.some(({ node }) => !nodes.get(node).element.closest('[hidden], [inert]'));
+      if (!modal && loop.states.includes(visual) && available) {
+        if (!activeLoops.has(id)) activeLoops.set(id, { loop, start: now });
+      } else if (activeLoops.has(id)) {
+        activeLoops.delete(id);
+      }
+    }
+    if (activeLoops.size) {
+      paintActiveLoops(now);
+      if (!loopRequest) loopRequest = requestAnimationFrame(loopFrame);
+    } else if (loopRequest) {
+      cancelAnimationFrame(loopRequest);
+      loopRequest = 0;
+    }
   }
 
   function draw() {
@@ -286,12 +375,7 @@ async function mount(pack, recipe) {
       const distance = route?.direction * 28 || 0;
       layer.style.transform = transition ? `translateX(${px(leaving ? -distance * progress : distance * (1 - progress))})` : '';
     }
-    const tracks = new Map();
-    for (const track of sequence?.tracks ?? []) {
-      const values = tracks.get(track.node) ?? {};
-      values[track.property] = sample(track.keysByProfile?.[profile] ?? track.keys, time);
-      tracks.set(track.node, values);
-    }
+    const tracks = sampleTracks(sequence?.tracks ?? [], profile, time);
     for (const [id, node] of nodes) {
       const { source, element, art, pressedArt, copy, box, screen } = node;
       const sceneState = transition && screen === outgoingScreen ? route.from : visual;
@@ -303,6 +387,12 @@ async function mount(pack, recipe) {
       const skipAction = sequence?.skip?.action;
       element.hidden = !visible && !exiting;
       const hasClaim = claimed || recipe.states[paintState].claimed;
+      if (source.progress) {
+        const value = recipe.states[paintState].progress?.value;
+        if (value === undefined) element.removeAttribute('aria-valuenow');
+        else element.setAttribute('aria-valuenow', value);
+        nodes.get(source.progress.fill).element.style.clipPath = `inset(0 ${100 - (value ?? 0)}% 0 0)`;
+      }
       if (element instanceof HTMLButtonElement) {
         element.disabled = source.disabled === true || source.disabledIn?.includes(sceneState) === true ||
           (source.disableWhenClaimed === true && hasClaim) || manual || !visible ||
@@ -318,7 +408,7 @@ async function mount(pack, recipe) {
         }
       }
       if (copy) {
-        const value = getText((hasClaim && source.claimedText) || source.textByState?.[paintState] || source.text);
+        const value = getText((hasClaim && source.claimedText) || source.textByState?.[paintState] || source.text, paintState);
         if (copy.textContent !== String(value)) copy.textContent = value;
         if (source.font?.minSize && !element.hidden && node.lastTextFit !== value && copy.getClientRects().length) {
           fitCopy(copy, source.font);
@@ -331,13 +421,14 @@ async function mount(pack, recipe) {
       const visibilityOpacity = changing ? (event.entering ? fraction : 1 - fraction) : 1;
       element.style.opacity = transform?.opacity ?? baseOpacity * visibilityOpacity;
       element.style.transform = transform
-        ? `translate(${px(transform.x ?? 0)}, ${px(transform.y ?? 0)}) rotate(${transform.rotate ?? 0}deg) scale(${transform.scaleX ?? 1}, ${transform.scaleY ?? 1})`
+        ? transformStyle(transform)
         : changing ? `translateY(${px(event.y * (event.entering ? 1 - fraction : fraction))})` : '';
     }
     stage.dataset.state = visual;
     if (currentScreen) stage.dataset.screen = currentScreen;
     if (animation) stage.dataset.time = String(Math.round(time));
     else delete stage.dataset.time;
+    if (loops.length) syncLoops(visual);
   }
 
   function emit(action) {
@@ -405,6 +496,7 @@ async function mount(pack, recipe) {
   }
 
   function play(active, finishReduced) {
+    stopLoops();
     animation = active;
     if (reduced && finishReduced) {
       advance(active.duration);
@@ -445,24 +537,31 @@ async function mount(pack, recipe) {
     draw();
   }
 
-  function reset() {
+  function resetState() {
+    stopLoops();
     cancelAnimationFrame(request);
     request = 0;
     previousTime = 0;
     manual = false;
+    manualLoop = null;
+    demo = null;
     animation = null;
     state = recipe.initialState;
     counts = {};
     claimed = false;
     remembered.clear();
     history.length = 0;
+  }
+
+  function reset() {
+    resetState();
     draw();
     sync();
   }
 
   function show(stateId) {
-    reset();
     if (!Object.hasOwn(recipe.states, stateId)) return;
+    resetState();
     state = stateId;
     manual = true;
     draw();
@@ -472,8 +571,17 @@ async function mount(pack, recipe) {
   function seek(sequenceId, time) {
     const sequence = visuals.get(sequenceId);
     if (!sequence) return;
-    reset();
+    resetState();
     manual = true;
+    const frameTime = Math.max(0, Number(time) || 0);
+    if (sequence.loop) {
+      const { loop } = sequence;
+      state = loop.states[0];
+      manualLoop = { id: sequenceId, loop, time: Math.min(frameTime, loop.period) };
+      draw();
+      sync();
+      return;
+    }
     if (sequence.routeAction) {
       state = recipe.actions[sequence.routeAction].from[0];
       animation = makeRoute(sequence.routeAction, state);
@@ -482,13 +590,30 @@ async function mount(pack, recipe) {
       state = source ?? sequence.phases?.[0]?.state ?? recipe.initialState;
       animation = makeAnimation(sequenceId, sequence, state);
     }
-    advance(Math.max(0, Number(time) || 0));
+    advance(frameTime);
+  }
+
+  function openDemo(id) {
+    const entry = recipe.previewDemos?.[id];
+    if (!entry) {
+      reset();
+      return;
+    }
+    resetState();
+    demo = id;
+    state = entry.state;
+    if (entry.motion) play(makeAnimation(entry.motion, recipe.motion[entry.motion], state), false);
+    else {
+      draw();
+      sync();
+    }
   }
 
   function select(name, items, value, change) {
     const label = document.createElement('label');
     label.append(name);
     const field = document.createElement('select');
+    field.setAttribute('aria-label', name);
     for (const [id, labelText] of items) field.add(new Option(labelText, id));
     field.value = value;
     field.addEventListener('change', () => change(field.value));
@@ -508,8 +633,12 @@ async function mount(pack, recipe) {
     fixture = value;
     draw();
   });
+  const demoControl = demos.length ? select('Loading demo', [
+    ['', 'Off'], ...demos.map(([id, entry]) => [id, entry.label]),
+  ], '', openDemo) : null;
   let timeline;
   let position;
+  let reducedControl;
   if (visuals.size) {
     timeline = select('Timeline', [['', 'Choose timeline'], ...[...visuals].map(([id, entry]) => [id, entry.label])], '', (value) => {
       if (value) seek(value, 0);
@@ -526,11 +655,11 @@ async function mount(pack, recipe) {
     label.append(position);
     tools.append(label);
     const reducedLabel = document.createElement('label');
-    const box = document.createElement('input');
-    box.type = 'checkbox';
-    box.checked = reduced;
-    box.addEventListener('change', () => { reduced = box.checked; reset(); });
-    reducedLabel.append(box, 'Reduce motion');
+    reducedControl = document.createElement('input');
+    reducedControl.type = 'checkbox';
+    reducedControl.checked = reduced;
+    reducedControl.addEventListener('change', () => updateReduced(reducedControl.checked));
+    reducedLabel.append(reducedControl, 'Reduce motion');
     tools.append(reducedLabel);
   }
   const restart = document.createElement('button');
@@ -540,12 +669,26 @@ async function mount(pack, recipe) {
 
   function sync() {
     stateControl.value = manual ? state : 'live';
+    if (demoControl) demoControl.value = demo ?? '';
     if (timeline && position) {
-      timeline.value = manual && animation ? animation.id : '';
+      const inspected = manual ? manualLoop ?? animation : null;
+      timeline.value = inspected?.id ?? '';
       position.disabled = !timeline.value;
-      position.max = timeline.value ? animation.duration : 0;
-      position.value = timeline.value ? animation.time : 0;
-      position.title = timeline.value ? `${Math.round(animation.time)} ms` : '';
+      position.max = inspected?.loop?.period ?? inspected?.duration ?? 0;
+      position.value = inspected?.time ?? 0;
+      position.title = inspected ? `${Math.round(inspected.time)} ms` : '';
+    }
+  }
+
+  function updateReduced(next) {
+    reduced = next;
+    if (reducedControl) reducedControl.checked = reduced;
+    stopLoops();
+    if (reduced && !manual && (animation?.route || animation?.sequence?.reduced === 'finish')) {
+      cancelAnimationFrame(request);
+      advance(animation.duration);
+    } else {
+      draw();
     }
   }
 
@@ -554,10 +697,16 @@ async function mount(pack, recipe) {
     const action = animation ? animation.sequence?.skip?.action : recipe.states[state].escape;
     if (recipe.actions[action]) activate(action);
   });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopLoops();
+    else draw();
+  });
+  motionPreference.addEventListener('change', () => updateReduced(motionPreference.matches));
   addEventListener('resize', resize);
   resize();
   if (params.has('sequence')) seek(params.get('sequence'), params.get('t'));
   else if (params.has('state')) show(params.get('state'));
+  else if (params.has('demo')) openDemo(params.get('demo'));
   window.preview = {
     get state() { return stage.dataset.state; },
     get screen() { return stage.dataset.screen; },

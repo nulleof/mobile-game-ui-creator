@@ -124,6 +124,39 @@
     "first-segment": {
       "label": "Reactor · Fifth segment",
       "screen": "reactor"
+    },
+    "loading-start": {
+      "label": "Loading · 20%",
+      "screen": "loading",
+      "progress": {
+        "value": 20
+      }
+    },
+    "loading-hold": {
+      "label": "Loading · 55%",
+      "screen": "loading",
+      "progress": {
+        "value": 55
+      }
+    },
+    "loading-unknown": {
+      "label": "Loading · Unknown",
+      "screen": "loading",
+      "progress": {}
+    },
+    "loading-paused": {
+      "label": "Loading · Paused",
+      "screen": "loading",
+      "progress": {
+        "value": 55
+      }
+    },
+    "loading-done": {
+      "label": "Loading · Complete",
+      "screen": "loading",
+      "progress": {
+        "value": 100
+      }
     }
   },
   "initialState": "station",
@@ -798,6 +831,32 @@
           "press": 0.98,
           "children": [
             {
+              "id": "upgrade-shine-mask",
+              "box": [
+                15,
+                10,
+                434,
+                88
+              ],
+              "clip": true,
+              "radius": 7,
+              "passThrough": true,
+              "children": [
+                {
+                  "id": "upgrade-sheen",
+                  "box": [
+                    0,
+                    0,
+                    136,
+                    88
+                  ],
+                  "fill": "linear-gradient(112deg, #ffc94900 12%, #ffc94b34 32%, #fff3beab 52%, #ffcc5462 63%, #ffc94900 83%)",
+                  "passThrough": true,
+                  "opacity": 0
+                }
+              ]
+            },
+            {
               "id": "upgrade-glint",
               "box": [
                 15,
@@ -1113,6 +1172,168 @@
               "prefix": "Power output   "
             }
           }
+        }
+      ]
+    },
+    {
+      "id": "loading-panel",
+      "box": [
+        707,
+        168,
+        524,
+        334
+      ],
+      "screen": "loading",
+      "qa": "safe",
+      "asset": "panel",
+      "children": [
+        {
+          "id": "loading-icon",
+          "box": [
+            33,
+            33,
+            66,
+            66
+          ],
+          "asset": "reactor"
+        },
+        {
+          "id": "loading-title",
+          "box": [
+            117,
+            35,
+            374,
+            59
+          ],
+          "text": "REACTOR SECTOR",
+          "font": {
+            "size": 35,
+            "align": "left",
+            "single": true,
+            "weight": 850,
+            "color": "#e2f6fa"
+          }
+        },
+        {
+          "id": "loading-rule",
+          "box": [
+            35,
+            121,
+            454,
+            2
+          ],
+          "fill": "linear-gradient(90deg,#57e7d2a0,#57e7d212)"
+        },
+        {
+          "id": "loading-status",
+          "box": [
+            43,
+            153,
+            347,
+            49
+          ],
+          "text": "Loading reactor data",
+          "font": {
+            "size": 24,
+            "align": "left",
+            "single": true,
+            "weight": 750,
+            "color": "#afd6dd"
+          },
+          "textByState": {
+            "loading-unknown": "Waiting for sector data",
+            "loading-paused": "Loading paused",
+            "loading-done": "Sector data ready"
+          }
+        },
+        {
+          "id": "loading-value",
+          "box": [
+            399,
+            149,
+            84,
+            56
+          ],
+          "text": {
+            "progress": true
+          },
+          "font": {
+            "size": 32,
+            "align": "right",
+            "single": true,
+            "weight": 850,
+            "color": "#e2f6fa"
+          }
+        },
+        {
+          "id": "loading-meter",
+          "box": [
+            39,
+            220,
+            446,
+            40
+          ],
+          "asset": "progress-track",
+          "label": "Reactor data loading progress",
+          "progress": {
+            "fill": "loading-fill"
+          },
+          "children": [
+            {
+              "id": "loading-fill",
+              "box": [
+                10,
+                8,
+                426,
+                24
+              ],
+              "radius": 4,
+              "clip": true,
+              "fill": "linear-gradient(180deg,#72ffeb 0%,#33d6bf 45%,#19a8a0 100%)",
+              "children": [
+                {
+                  "id": "loading-sheen",
+                  "box": [
+                    0,
+                    0,
+                    106,
+                    24
+                  ],
+                  "fill": "linear-gradient(108deg,#e8fffe00 12%,#e8fffe11 28%,#f2ffffb8 53%,#e8fffe00 86%)",
+                  "opacity": 0,
+                  "passThrough": true
+                }
+              ]
+            },
+            {
+              "id": "unknown-mask",
+              "box": [
+                10,
+                8,
+                426,
+                24
+              ],
+              "visibleIn": [
+                "loading-unknown"
+              ],
+              "clip": true,
+              "radius": 4,
+              "children": [
+                {
+                  "id": "loading-unknown-band",
+                  "box": [
+                    0,
+                    0,
+                    150,
+                    24
+                  ],
+                  "fill": "linear-gradient(90deg,#17e9d000,#40e2c883 28%,#91fff2 58%,#17e9d000)",
+                  "opacity": 0,
+                  "passThrough": true
+                }
+              ]
+            }
+          ]
         }
       ]
     }
@@ -1908,6 +2129,27 @@
           "end": 820
         }
       ]
+    },
+    "sector-loading": {
+      "label": "Sector loading · Measured",
+      "duration": 3100,
+      "allowLoops": true,
+      "reduced": "play",
+      "phases": [
+        {
+          "at": 0,
+          "state": "loading-start"
+        },
+        {
+          "at": 700,
+          "state": "loading-hold"
+        },
+        {
+          "at": 2900,
+          "state": "loading-done"
+        }
+      ],
+      "tracks": []
     }
   },
   "screens": {
@@ -1916,6 +2158,9 @@
     },
     "reactor": {
       "initial": "ready"
+    },
+    "loading": {
+      "initial": "loading-start"
     }
   },
   "motionDefaults": {
@@ -1926,6 +2171,196 @@
     "exit": {
       "ms": 120,
       "y": -6
+    }
+  },
+  "previewDemos": {
+    "measured": {
+      "label": "Measured with a hold",
+      "state": "loading-start",
+      "motion": "sector-loading"
+    },
+    "unknown": {
+      "label": "Unknown progress",
+      "state": "loading-unknown"
+    },
+    "paused": {
+      "label": "Paused at 55%",
+      "state": "loading-paused"
+    }
+  },
+  "loops": {
+    "reactor-float": {
+      "label": "Reactor entry · Float",
+      "period": 3600,
+      "states": [
+        "station",
+        "station-upgraded"
+      ],
+      "control": "reactor-entry",
+      "tracks": [
+        {
+          "node": "overview-reactor-icon",
+          "property": "y",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              1000,
+              -5,
+              "smooth"
+            ],
+            [
+              2300,
+              0,
+              "smooth"
+            ]
+          ]
+        }
+      ]
+    },
+    "upgrade-shine": {
+      "label": "Upgrade button · Shine",
+      "period": 4200,
+      "states": [
+        "ready"
+      ],
+      "control": "upgrade",
+      "tracks": [
+        {
+          "node": "upgrade-sheen",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              -136
+            ],
+            [
+              420,
+              -136
+            ],
+            [
+              1120,
+              434,
+              "smooth"
+            ]
+          ]
+        },
+        {
+          "node": "upgrade-sheen",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0
+            ],
+            [
+              440,
+              0
+            ],
+            [
+              550,
+              0.64,
+              "smooth"
+            ],
+            [
+              980,
+              0.64
+            ],
+            [
+              1120,
+              0,
+              "smooth"
+            ]
+          ]
+        }
+      ]
+    },
+    "loading-shine": {
+      "label": "Loading bar · Fill shine",
+      "period": 1350,
+      "states": [
+        "loading-hold",
+        "loading-start"
+      ],
+      "tracks": [
+        {
+          "node": "loading-sheen",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              -100
+            ],
+            [
+              990,
+              426,
+              "linear"
+            ]
+          ]
+        },
+        {
+          "node": "loading-sheen",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0.85
+            ],
+            [
+              990,
+              0.85
+            ],
+            [
+              1010,
+              0
+            ]
+          ]
+        }
+      ]
+    },
+    "loading-indeterminate": {
+      "label": "Loading bar · Unknown progress",
+      "period": 1550,
+      "states": [
+        "loading-unknown"
+      ],
+      "tracks": [
+        {
+          "node": "loading-unknown-band",
+          "property": "x",
+          "keys": [
+            [
+              0,
+              -150
+            ],
+            [
+              1350,
+              426,
+              "linear"
+            ]
+          ]
+        },
+        {
+          "node": "loading-unknown-band",
+          "property": "opacity",
+          "keys": [
+            [
+              0,
+              0.88
+            ],
+            [
+              1350,
+              0.88
+            ],
+            [
+              1370,
+              0
+            ]
+          ]
+        }
+      ]
     }
   }
 }

@@ -10,7 +10,7 @@ const tuple = (value, length) => Array.isArray(value) && value.length === length
 export async function validateExample(recipe, pack, loadAsset) {
   assert.equal(recipe.pack.id, pack.id, 'Pack ID mismatch');
   assert.equal(recipe.pack.version, pack.version, 'Pack version mismatch');
-  const { design, states, initialState, actions, motion, screens, motionDefaults } = recipe;
+  const { design, states, initialState, actions, motion, screens, motionDefaults, loops = {}, previewDemos = {} } = recipe;
   assert.ok(design.width > 0 && Object.keys(design.profiles).length > 0, 'Design profiles are required');
   for (const profile of Object.values(design.profiles)) {
     assert.ok(tuple(profile.viewport, 2) && profile.viewport.every((edge) => edge > 0), 'Invalid viewport');
@@ -28,6 +28,11 @@ export async function validateExample(recipe, pack, loadAsset) {
     for (const state of Object.values(states)) screenExists(state.screen);
     for (const [id, screen] of Object.entries(screens)) stateBelongsTo(screen.initial, id);
   }
+  for (const [id, state] of Object.entries(states)) {
+    if (!state.progress) continue;
+    const { value } = state.progress;
+    assert.ok(value === undefined || (numeric(value) && value >= 0 && value <= 100), `Invalid progress value: ${id}`);
+  }
   if (motionDefaults) {
     for (const key of ['enter', 'exit']) {
       const timing = motionDefaults[key];
@@ -35,6 +40,7 @@ export async function validateExample(recipe, pack, loadAsset) {
     }
   }
   const ids = new Map();
+  const controls = new Set();
   function visit(nodes, root = true, screen) {
     for (const node of nodes) {
       assert.ok(componentId.test(node.id) && !ids.has(node.id), `Invalid or duplicate node ID: ${node.id}`);
@@ -56,7 +62,13 @@ export async function validateExample(recipe, pack, loadAsset) {
         ...(node.visibleIn ?? []), ...(node.disabledIn ?? []),
         ...Object.keys(node.assetByState ?? {}), ...Object.keys(node.textByState ?? {}),
       ]) knownStates(state);
-      if (node.action) assert.ok(Object.hasOwn(actions, node.action), `Unknown action: ${node.action}`);
+      if (node.action) {
+        assert.ok(Object.hasOwn(actions, node.action), `Unknown action: ${node.action}`);
+        if (actions[node.action].type === 'input') controls.add(node.id);
+      }
+      if (node.progress) {
+        assert.ok(node.label && node.children?.some((child) => child.id === node.progress.fill), `Invalid progress fill: ${node.id}`);
+      }
       for (const text of [node.text, ...Object.values(node.textByState ?? {})]) {
         if (text?.key) assert.ok(Object.hasOwn(recipe.data, text.key), `Missing fixture: ${text.key}`);
       }
@@ -64,6 +76,7 @@ export async function validateExample(recipe, pack, loadAsset) {
     }
   }
   visit(recipe.nodes);
+  const timelineIds = new Set(Object.keys(motion));
   for (const [id, action] of Object.entries(actions)) {
     for (const state of action.from ?? []) knownStates(state);
     if (action.next) knownStates(action.next);
@@ -77,11 +90,36 @@ export async function validateExample(recipe, pack, loadAsset) {
     assert.ok(action.type === 'input' && action.from?.length && label, `Invalid screen action: ${id}`);
     assert.ok(action.from.every((state) => states[state].screen !== to), `Screen action must change screens: ${id}`);
     assert.ok(ids.has(focus) && ids.get(focus) === to, `Invalid route focus target: ${id}`);
-    assert.ok(!Object.hasOwn(motion, id), `Screen action and timeline share an ID: ${id}`);
+    assert.ok(!timelineIds.has(id), `Screen action and timeline share an ID: ${id}`);
+    timelineIds.add(id);
+  }
+  const validTime = (time, previous, duration) => numeric(time) && time >= 0 && time >= previous && time <= duration;
+  function validateTracks(tracks, duration, ambient = false) {
+    for (const track of tracks) {
+      assert.ok(ids.has(track.node) && properties.has(track.property), `Invalid track: ${track.node}/${track.property}`);
+      if (ambient) assert.ok(!controls.has(track.node), `Animate a visual layer inside control: ${track.node}`);
+      for (const [profile, keys] of Object.entries({ default: track.keys, ...track.keysByProfile })) {
+        assert.ok(profile === 'default' || Object.hasOwn(design.profiles, profile), `Unknown keyframe profile: ${profile}`);
+        assert.ok(keys.length > 0, `Track has no keyframes: ${track.node}`);
+        let previous = 0;
+        for (const [time, value, ease = 'linear'] of keys) {
+          assert.ok(validTime(time, previous, duration) && numeric(value) && easing.has(ease), `Invalid keyframe: ${track.node}`);
+          previous = time;
+        }
+      }
+    }
+  }
+  for (const [id, loop] of Object.entries(loops)) {
+    assert.ok(componentId.test(id) && !timelineIds.has(id) && loop.label, `Invalid loop ID or label: ${id}`);
+    assert.ok(numeric(loop.period) && loop.period > 0 && loop.states?.length && loop.tracks?.length, `Incomplete loop: ${id}`);
+    assert.ok(!loop.control || controls.has(loop.control), `Invalid loop control: ${loop.control}`);
+    for (const state of loop.states) knownStates(state);
+    validateTracks(loop.tracks, loop.period, true);
   }
   const seenMotions = new Set();
   for (const sequence of Object.values(motion)) {
     assert.ok(numeric(sequence.duration) && sequence.duration > 0, 'Motion duration is required');
+    if (sequence.allowLoops) assert.ok(!sequence.trigger && !sequence.events?.length, 'Only a passive sequence can allow loops');
     if (sequence.trigger) {
       assert.ok(Object.hasOwn(actions, sequence.trigger), `Unknown motion trigger: ${sequence.trigger}`);
       assert.ok(!actions[sequence.trigger].navigate, 'Screen transitions provide their own timeline');
@@ -95,11 +133,10 @@ export async function validateExample(recipe, pack, loadAsset) {
     }
     if (sequence.focus) assert.ok(ids.has(sequence.focus), 'Invalid completion focus target');
     if (sequence.reduced !== undefined) assert.ok(['finish', 'omit', 'play'].includes(sequence.reduced), 'Invalid reduced-motion rule');
-    const validTime = (time, previous) => numeric(time) && time >= 0 && time >= previous && time <= sequence.duration;
     for (const list of [sequence.phases ?? [], sequence.events ?? []]) {
       let previous = 0;
       for (const step of list) {
-        assert.ok(validTime(step.at, previous), `Step outside timeline: ${step.at}`);
+        assert.ok(validTime(step.at, previous, sequence.duration), `Step outside timeline: ${step.at}`);
         if (step.state) knownStates(step.state);
         if (step.action) assert.ok(Object.hasOwn(actions, step.action), `Unknown event action: ${step.action}`);
         previous = step.at;
@@ -107,20 +144,14 @@ export async function validateExample(recipe, pack, loadAsset) {
     }
     for (const { event, target, effect, at, end } of sequence.impacts ?? []) {
       assert.ok(event && ids.has(target) && ids.has(effect), `Invalid impact target: ${event}`);
-      assert.ok(validTime(at, 0) && validTime(end, at) && end > at, `Invalid impact timing: ${event}`);
+      assert.ok(validTime(at, 0, sequence.duration) && validTime(end, at, sequence.duration) && end > at, `Invalid impact timing: ${event}`);
     }
-    for (const track of sequence.tracks) {
-      assert.ok(ids.has(track.node) && properties.has(track.property), `Invalid track: ${track.node}/${track.property}`);
-      for (const [profile, keys] of Object.entries({ default: track.keys, ...track.keysByProfile })) {
-        assert.ok(profile === 'default' || Object.hasOwn(design.profiles, profile), `Unknown keyframe profile: ${profile}`);
-        assert.ok(keys.length > 0, `Track has no keyframes: ${track.node}`);
-        let previous = 0;
-        for (const [time, value, ease = 'linear'] of keys) {
-          assert.ok(validTime(time, previous) && numeric(value) && easing.has(ease), `Invalid keyframe: ${track.node}`);
-          previous = time;
-        }
-      }
-    }
+    validateTracks(sequence.tracks, sequence.duration);
+  }
+  for (const [id, demo] of Object.entries(previewDemos)) {
+    assert.ok(componentId.test(id) && demo.label, `Invalid demo ID or label: ${id}`);
+    knownStates(demo.state);
+    if (demo.motion) assert.ok(motion[demo.motion]?.allowLoops, `Invalid demo timeline: ${demo.motion}`);
   }
 
   await Promise.all(Object.entries(pack.assets).map(async ([id, entry]) => {
